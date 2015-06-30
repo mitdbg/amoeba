@@ -38,6 +38,8 @@ import core.utils.TypeUtils;
 public class Optimizer {
 	RobustTreeHs rt;
 	int rtDepth;
+	int searchCount;
+	public double lambda = 0.2;
 
 	String dataset;
 	String hadoopHome;
@@ -85,6 +87,7 @@ public class Optimizer {
 	public Optimizer(String dataset, String hadoopHome) {
 		this.dataset = dataset;
 		this.hadoopHome = hadoopHome;
+		searchCount = 0;
 	}
 
 	public void loadIndex(String zookeeperHosts) {
@@ -507,7 +510,6 @@ public class Optimizer {
 		// If yes, find the number of tuples accessed.
 		double numTuples = 0;
 
-		double lambda = 0.2;
 		int counter = 0;
 		for (int i=queryWindow.size() - 1; i >= 0; i--) {
 			Query q = queryWindow.get(i);
@@ -716,6 +718,7 @@ public class Optimizer {
 				// If we traverse to root and see that there is no node with cutoff point less than
 				// that of predicate, we can do this
 				if (checkValid(node, p.attribute, p.type, testVal)) {
+					searchCount++;
 			        double numAccessedOld = getNumTuplesAccessed(node, true);
 
 					RNode r = node.clone();
@@ -750,6 +753,7 @@ public class Optimizer {
 
 			// Swap down the attribute and bring p above
 			if (leftPlan.PTop != null && rightPlan.PTop != null) {
+				searchCount++;
 				Plan pl = new Plan();
 				pl.cost = leftPlan.PTop.cost + rightPlan.PTop.cost;
 				pl.benefit = leftPlan.PTop.benefit + rightPlan.PTop.benefit;
@@ -769,6 +773,7 @@ public class Optimizer {
 					assert (c < 0 && leftPlan.PTop == null) || (c > 0 && rightPlan.PTop == null);
 					// Rotate left
 					if (c < 0 && rightPlan.PTop != null) {
+						searchCount++;
 						Plan pl = new Plan();
 						pl.cost = rightPlan.PTop.cost;
 						pl.benefit = rightPlan.PTop.benefit;
@@ -783,6 +788,7 @@ public class Optimizer {
 					
 					//Rotate right
 					if (c > 0 && leftPlan.PTop != null) {
+						searchCount++;
 						Plan pl = new Plan();
 						pl.cost = leftPlan.PTop.cost;
 						pl.benefit = leftPlan.PTop.benefit;
@@ -799,6 +805,7 @@ public class Optimizer {
 
 			// Just Re-Use the Best Plans found for the left/right subtree
 			if (leftPlan.Best != null && rightPlan.Best != null) {
+				searchCount++;
 				Plan pl = new Plan();
 				pl.cost = leftPlan.Best.cost + rightPlan.Best.cost;
 				pl.benefit = leftPlan.Best.benefit + rightPlan.Best.benefit;
@@ -810,6 +817,7 @@ public class Optimizer {
 				pl.actions = ac;
 	        	updatePlan(best, pl);
 			} else if (rightPlan.Best != null) {
+				searchCount++;
 				Plan pl = new Plan();
 				pl.cost = rightPlan.Best.cost;
 				pl.benefit = rightPlan.Best.benefit;
@@ -820,6 +828,7 @@ public class Optimizer {
 				pl.actions = ac;
 	        	updatePlan(best, pl);
 			} else if (leftPlan.Best != null) {
+				searchCount++;
 				Plan pl = new Plan();
 				pl.cost = leftPlan.Best.cost;
 				pl.benefit = leftPlan.Best.benefit;
@@ -854,6 +863,10 @@ public class Optimizer {
 		} else {
 			return k+1;
 		}
+	}
+
+	public int getSearchCount() {
+		return searchCount;
 	}
 
 	public void loadQueries() {

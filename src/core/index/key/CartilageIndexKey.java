@@ -48,9 +48,11 @@ public class CartilageIndexKey implements MDIndexKey, Cloneable{
 	public CartilageIndexKey(String keyString) {
 		String[] tokens = keyString.trim().split(",");
 		this.delimiter = tokens[0].charAt(0);
-		keyAttrIdx = new int[tokens.length-1];
-		for (int i = 0; i < keyAttrIdx.length; i++) {
-			keyAttrIdx[i] = Integer.parseInt(tokens[i+1]);
+		if (tokens.length > 1) {
+			keyAttrIdx = new int[tokens.length - 1];
+			for (int i = 0; i < keyAttrIdx.length; i++) {
+				keyAttrIdx[i] = Integer.parseInt(tokens[i + 1]);
+			}
 		}
 	}
 
@@ -179,6 +181,14 @@ public class CartilageIndexKey implements MDIndexKey, Cloneable{
 	 * @return
 	 */
 	public TYPE[] detectTypes(boolean skipNonKey){
+		if (this.types != null) {
+			if(keyAttrIdx==null){
+				keyAttrIdx = new int[this.types.length];
+				for(int i=0;i<keyAttrIdx.length;i++)
+					keyAttrIdx[i] = i;
+			}
+			return this.types;
+		}
 		List<TYPE> types = new ArrayList<TYPE>();
 
 		numAttrs = 0;
@@ -273,11 +283,11 @@ public class CartilageIndexKey implements MDIndexKey, Cloneable{
 	    // Check for a sign.
 	    long num  = 0;
 	    int sign = -1;
-	    final char ch  = (char)bytes[off];
-	    if (ch == '-')
-	        sign = 1;
-	    else
-	        num = '0' - ch;
+		final char ch = (char) bytes[off];
+		if (ch == '-')
+			sign = 1;
+		else
+			num = '0' - ch;
 
 	    // Build the number.
 	    int i = off+1;
@@ -430,8 +440,10 @@ public class CartilageIndexKey implements MDIndexKey, Cloneable{
 
 	public String toString() {
 		String result = String.valueOf(delimiter);
-		for (int i = 0; i < keyAttrIdx.length; i++) {
-			result += "," + keyAttrIdx[i];
+		if (keyAttrIdx != null) {
+			for (int i = 0; i < keyAttrIdx.length; i++) {
+				result += "," + keyAttrIdx[i];
+			}
 		}
 		return result;
 	}

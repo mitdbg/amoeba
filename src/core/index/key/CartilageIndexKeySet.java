@@ -268,7 +268,7 @@ public class CartilageIndexKeySet {
 	 * @return
 	 */
 	public KeySetIterator iterator(){
-		return new KeySetIterator(values);
+		return new KeySetIterator(values, this.types);
 	}
 
 	/**
@@ -281,9 +281,9 @@ public class CartilageIndexKeySet {
 	public static class KeySetIterator implements Iterator<CartilageIndexKey>{
 		private Iterator<Object[]> valueItr;
 		private ParsedIndexKey key;
-		public KeySetIterator(List<Object[]> values){
+		public KeySetIterator(List<Object[]> values, TYPE[] types){
 			this.valueItr = values.iterator();
-			key = new ParsedIndexKey();
+			key = new ParsedIndexKey(types);
 		}
 		public boolean hasNext() {
 			return valueItr.hasNext();

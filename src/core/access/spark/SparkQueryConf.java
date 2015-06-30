@@ -141,7 +141,11 @@ public class SparkQueryConf {
 
 	public void setNumReplicas(int numReplicas) { conf.set(NUM_REPLICAS, String.valueOf(numReplicas));}
 
-	public int getNumReplicas() { return Integer.parseInt(conf.get(NUM_REPLICAS));}
+	public int getNumReplicas() {
+		if (conf.get(NUM_REPLICAS) == null) {
+			return -1;
+		}
+		return Integer.parseInt(conf.get(NUM_REPLICAS));}
 
 	public Configuration getConf(){
 		return conf;
