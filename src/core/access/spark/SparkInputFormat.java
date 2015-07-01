@@ -46,7 +46,7 @@ public class SparkInputFormat extends FileInputFormat<LongWritable, IteratorReco
 
 	private static final Log LOG = LogFactory.getLog(FileInputFormat.class);
 
-	private SparkQueryConf queryConf;
+	SparkQueryConf queryConf;
 
 
 	public static class SparkFileSplit extends CombineFileSplit implements Serializable {

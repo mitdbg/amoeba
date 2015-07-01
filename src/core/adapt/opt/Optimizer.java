@@ -90,7 +90,7 @@ public class Optimizer {
 	public void loadIndex(String zookeeperHosts) {
 		FileSystem fs = HDFSUtils.getFS(hadoopHome + "/etc/hadoop/core-site.xml");
 		
-		Bucket.counters = new MDIndex.BucketCounts(zookeeperHosts);
+		//Bucket.counters = new MDIndex.BucketCounts(zookeeperHosts);
 		
 		String pathToIndex = this.dataset + "/index";
 		String pathToSample = this.dataset + "/sample";
@@ -567,6 +567,7 @@ public class Optimizer {
 		List<RNode> nodesAccessed = changed.search(ps);
 		float tCount = 0;
 		for (RNode n: nodesAccessed) {
+			//System.out.println("num nodes accessed: "+nodesAccessed.size());
 			if (real) {
 				tCount += n.bucket.getNumTuples();
 			} else {

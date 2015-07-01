@@ -22,13 +22,13 @@ public class SparkRecordReader extends RecordReader<LongWritable, IteratorRecord
 	protected Configuration conf;
 	
 	protected SparkFileSplit sparkSplit;
-	private int currentFile;
+	int currentFile;
 	
 	protected PartitionIterator iterator;
 
-	private LongWritable key;
-	private long recordId;
-	private boolean hasNext;
+	LongWritable key;
+	long recordId;
+	boolean hasNext;
 
 	CuratorFramework client;
 	//BucketCounts counter;
