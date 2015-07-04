@@ -19,22 +19,24 @@ import core.utils.HDFSUtils;
  */
 public class Builder {
 
+    static int bucketSize = 64; // 64 mb
+    static String propertiesFile = "/Users/qui/Documents/mdindex/conf/cartilage.properties";
+    //static String propertiesFile = "/home/mdindex/cartilage.properties";
+
+    // Script to build an index from a collection of sample files.
+    // Args:
+    // -- tpchSize: size of the full table, in MB
+    // -- samplingRate: how much to sample from the samples (usually 1, unless samples are large)
     public static void main(String[] args) {
         double samplingRate = Double.parseDouble(args[args.length-1]);
-        int bucketSize = 64; // 64 mb
-        int scaleFactor = 1000;
-        //int scaleFactor = 1;
-        //String hdfsDir = "/user/qui/dodo";
-        String hdfsDir = "/user/anil/one";
-        //String propertiesFile = "/Users/qui/Documents/mdindex/conf/cartilage.properties";
-        String propertiesFile = "/home/mdindex/cartilage.properties";
+        int tpchSize = Integer.parseInt(args[args.length - 2]);
+        String hdfsDir = new ConfUtils(propertiesFile).getHDFS_HOMEDIR();
 
-        int numBuckets = (scaleFactor * 759) / bucketSize + 1;
+        int numBuckets = tpchSize / bucketSize + 1;
+
         RobustTreeHs index = new RobustTreeHs(samplingRate);
         //KDMedianTree index = new KDMedianTree(samplingRate);
         index.initBuild(numBuckets);
-        //CartilageIndexKey key = new CartilageIndexKey('|');
-        //InputReader r = new InputReader(index, key);
 
         ConfUtils conf = new ConfUtils(propertiesFile);
         FileSystem fs = HDFSUtils.getFS(conf.getHADOOP_HOME() + "/etc/hadoop/core-site.xml");
