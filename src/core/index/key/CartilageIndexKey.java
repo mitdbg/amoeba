@@ -445,7 +445,7 @@ public class CartilageIndexKey implements MDIndexKey, Cloneable{
 				result += "," + keyAttrIdx[i];
 			}
 		}
+
 		return result;
 	}
-
 }

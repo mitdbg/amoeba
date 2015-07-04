@@ -50,7 +50,7 @@ public class Query implements Serializable{
 
 		public FilterQuery(String predString) {
 			String[] parts = predString.split(";");
-			this.predicates = new Predicate[parts.length];
+			this.predicates = new Predicate[parts.length-1];
 			for (int i=0; i<parts.length-1; i++) {
 				this.predicates[i] = new Predicate(parts[i]);
 			}

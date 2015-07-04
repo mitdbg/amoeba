@@ -32,7 +32,6 @@ import core.utils.TypeUtils;
 /**
  *
  * @author anil
- *
  */
 
 public class Optimizer {
@@ -437,7 +436,7 @@ public class Optimizer {
 	 * @param val
 	 * @return
 	 */
-	public boolean checkValid(RNode node, int attrId, TYPE t, Object val) {
+	public static boolean checkValidToRoot(RNode node, int attrId, TYPE t, Object val) {
 		while (node.parent != null) {
 			if (node.parent.attribute == attrId) {
 				int ret = TypeUtils.compareTo(node.parent.value, val, t);
@@ -454,6 +453,34 @@ public class Optimizer {
 		return true;
 	}
 
+	/**
+	 * Checks if it is valid to partition on attrId with value val at node's parent
+	 * @param node
+	 * @param attrId
+	 * @param t
+	 * @param val
+	 * @param isLeft - indicates if node is to the left(1) or right(-1) of parent
+	 * @return
+	 */
+	public boolean checkValidForSubtree(RNode node, int attrId, TYPE t, 
+			Object val, int isLeft) {
+		LinkedList<RNode> stack = new LinkedList<RNode>();
+		stack.add(node);
+		
+		while (stack.size() > 0) {
+			RNode n = stack.removeLast();
+			if (n.bucket == null) {
+				if (n.attribute == attrId) {
+					int comp = TypeUtils.compareTo(n.value, val, t);
+					if (comp * isLeft >= 0) return false;
+				}
+				stack.add(n.rightChild);
+				stack.add(n.leftChild);
+			}
+		}
+		return true;
+	}
+	
 	/**
 	 * Puts the new estimated number of tuples in each bucket after change
 	 * @param changed
@@ -522,7 +549,7 @@ public class Optimizer {
 		return numTuples;
 	}
 
-	public float getNumTuplesAccessed(RNode changed, Query q, boolean real) {
+	public static float getNumTuplesAccessed(RNode changed, Query q, boolean real) {
 		// First traverse to parent to see if query accesses node
 		// If yes, find the number of tuples accessed.
 		Predicate[] ps = ((FilterQuery)q).getPredicates();
@@ -717,7 +744,8 @@ public class Optimizer {
 
 				// If we traverse to root and see that there is no node with cutoff point less than
 				// that of predicate, we can do this
-				if (checkValid(node, p.attribute, p.type, testVal)) {
+
+				if (checkValidToRoot(node, p.attribute, p.type, testVal)) {
 					searchCount++;
 			        double numAccessedOld = getNumTuplesAccessed(node, true);
 
@@ -799,6 +827,49 @@ public class Optimizer {
 						pl.actions = ac;
 						updatePlan(pTop, pl);
 			        	updatePlan(best, pl);
+					}
+					
+					// Replace by the predicate
+					// If we traverse to root and see that there is no node with cutoff point less than
+					// that of predicate, 
+					if (checkValidToRoot(node, p.attribute, p.type, testVal)) {
+						boolean allGood;
+						if (c > 0) {
+							allGood = checkValidForSubtree(node.leftChild, p.attribute, p.type, testVal, 1);
+						} else {
+							allGood = checkValidForSubtree(node.rightChild, p.attribute, p.type, testVal, -1);
+						}
+						
+						if (allGood) {
+					        double numAccessedOld = getNumTuplesAccessed(node, true);
+
+							RNode r = node.clone();
+							r.attribute = p.attribute;
+							r.type = p.type;
+							r.value = testVal;
+							replaceInTree(node, r);
+
+					        populateBucketEstimates(r);
+					        double numAcccessedNew = getNumTuplesAccessed(r, false);
+					        double benefit = numAccessedOld - numAcccessedNew;
+
+					        if (benefit > 0) {
+					        	float cost = this.computeCost(r); // Note that buckets haven't changed
+					        	Plan pl = new Plan();
+					        	pl.cost = cost;
+					        	pl.benefit = (float) benefit;
+					        	Action ac = new Action();
+					        	ac.pid = pid;
+					        	ac.option = 1;
+					        	pl.actions = ac;
+
+					        	updatePlan(pTop, pl);
+					        	updatePlan(best, pl);
+					        }
+
+					        // Restore
+					        replaceInTree(r, node);	
+						}
 					}
 				}
 			}
@@ -915,7 +986,7 @@ public class Optimizer {
 		}
 		
 		byte[] indexBytes = this.rt.marshall();
-		HDFSUtils.writeFile(HDFSUtils.getFSByHadoopHome(hadoopHome), pathToIndex, (short) 3, this.rt.marshall(), 0, indexBytes.length, false);
+		HDFSUtils.writeFile(HDFSUtils.getFSByHadoopHome(hadoopHome), pathToIndex, Config.replication, this.rt.marshall(), 0, indexBytes.length, false);
 	}
 
 	/** Used only in simulator **/
