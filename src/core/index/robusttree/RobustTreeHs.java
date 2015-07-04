@@ -1,11 +1,6 @@
 package core.index.robusttree;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 import core.access.Predicate;
 import core.index.MDIndex;
@@ -396,5 +391,63 @@ public class RobustTreeHs implements MDIndex {
 			printNode(node.rightChild);
 			System.out.print(" }");
 		}
+	}
+
+	public void printBucketRanges(int attribute) {
+		printBucketRangeSubtree(this.getRoot(), attribute);
+	}
+
+	private static void printBucketRangeSubtree(RNode root, int attribute) {
+		if (root.bucket != null) {
+			if (root.valuesByAttribute.get(attribute) == null) {
+				System.out.println(root.bucket.getBucketId()+": []");
+			} else {
+				System.out.println(root.bucket.getBucketId()+": "+root.valuesByAttribute.get(attribute).toString());
+			}
+		} else {
+			printBucketRangeSubtree(root.leftChild, attribute);
+			printBucketRangeSubtree(root.rightChild, attribute);
+		}
+	}
+
+	public double[] getAllocations() {
+		List<RNode> queue = new ArrayList<RNode>();
+		Map<Integer, Double> allocs = new HashMap<Integer, Double>();
+		queue.add(this.getRoot());
+
+		int nodeNum = 0;
+		RNode filler = new RNode();
+		filler.attribute = -1;
+		int lastNode = 0;
+		while (queue.size() > 0) {
+			nodeNum++;
+			RNode node = queue.remove(0);
+			if (node.bucket != null || node.attribute == -1) {
+				if (nodeNum > lastNode * 2) {
+					break;
+				}
+				queue.add(filler);
+				queue.add(filler);
+				continue;
+			}
+			lastNode = nodeNum;
+			if (!(allocs.containsKey(node.attribute))) {
+				allocs.put(node.attribute, 0.0);
+			}
+			allocs.put(node.attribute, allocs.get(node.attribute) + Math.pow(2, -1 * Math.floor(Math.log(nodeNum) / Math.log(2)) + 1));
+			queue.add(node.leftChild);
+			queue.add(node.rightChild);
+		}
+		double[] allocArray = new double[numAttributes];
+		for (int i = 0; i < numAttributes; i++) {
+			if (!(allocs.containsKey(i))) {
+				allocArray[i] = 0;
+			} else {
+				allocArray[i] = allocs.get(i);
+			}
+		}
+		System.out.println(nodeNum);
+		return allocArray;
+
 	}
 }

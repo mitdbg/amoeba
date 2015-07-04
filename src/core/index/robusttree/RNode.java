@@ -1,8 +1,6 @@
 package core.index.robusttree;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import core.access.Predicate;
 import core.index.MDIndex.Bucket;
@@ -20,6 +18,7 @@ public class RNode {
     public int attribute;
     public TYPE type;
     public Object value;
+	Map<Integer, List<Object>> valuesByAttribute = new HashMap<Integer, List<Object>>();
 
     // Not used - left for legacy
     public float quantile;
@@ -243,17 +242,33 @@ public class RNode {
 			// For string tokens; we may have to read more than one token, so read till end of line
 			this.value = TypeUtils.deserializeValue(this.type, sc.nextLine().trim());
 
+			if (!this.valuesByAttribute.containsKey(this.attribute)) {
+				this.valuesByAttribute.put(this.attribute, new ArrayList<Object>());
+			}
+
 			this.leftChild = new RNode();
-			this.leftChild.parseNode(sc);
 			this.leftChild.parent = this;
+
 			this.rightChild = new RNode();
-			this.rightChild.parseNode(sc);
 			this.rightChild.parent = this;
+
+			for (Map.Entry<Integer, List<Object>> entry : this.valuesByAttribute.entrySet()) {
+				this.leftChild.valuesByAttribute.put(entry.getKey(), new ArrayList<Object>(entry.getValue()));
+				this.rightChild.valuesByAttribute.put(entry.getKey(), new ArrayList<Object>(entry.getValue()));
+			}
+
+			this.leftChild.valuesByAttribute.get(this.attribute).add("<= "+this.value.toString());
+			this.rightChild.valuesByAttribute.get(this.attribute).add("> " + this.value.toString());
+
+			this.leftChild.parseNode(sc);
+			this.rightChild.parseNode(sc);
+
 		} else if (type.equals("b")) {
 			Bucket b = new Bucket(sc.nextInt());
 			this.bucket = b;
 		} else {
 			System.out.println("Bad things have happened in unmarshall");
+			System.out.println(type);
 		}
 
 		return this;
