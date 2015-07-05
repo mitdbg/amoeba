@@ -54,7 +54,7 @@ public class TestIndexBuilder extends TestCase {
 		//key = new SinglePassIndexKey('|');
 		builder = new IndexBuilder();
 
-		attributes = Settings.numAttributes;
+		attributes = 16;
 		replication = 3;
 	}
 
@@ -108,15 +108,15 @@ public class TestIndexBuilder extends TestCase {
 		);
     }
 
-	public void testBuildKDMedianTreeBlockSamplingOnly(int scaleFactor) {
+	public void testBuildKDMedianTreeBlockSamplingOnly(int tpchSize) {
 		int bucketSize = 64; // 64 mb
-		int numBuckets = (scaleFactor * 759) / bucketSize + 1;
+		int numBuckets = tpchSize / bucketSize + 1;
 		System.out.println("Num buckets: "+numBuckets);
 		builder.buildWithBlockSamplingDir(0.0002,
 				numBuckets,
 				new KDMedianTree(1),
 				key,
-				Settings.tpchPath + scaleFactor + "/");
+				Settings.tpchPath + tpchSize + "/");
 	}
 
 	public void testBuildSimpleRangeTreeLocalReplicated(){
@@ -178,14 +178,14 @@ public class TestIndexBuilder extends TestCase {
 				getHDFSWriter(hdfsPartitionDir, (short) replication));
 	}
 
-	public void testBuildRobustTreeBlockSamplingOnly(int scaleFactor) {
+	public void testBuildRobustTreeBlockSamplingOnly(int tpchSize) {
 		int bucketSize = 64; // 64 mb
-		int numBuckets = (scaleFactor * 759) / bucketSize + 1;
+		int numBuckets = tpchSize / bucketSize + 1;
 		builder.buildWithBlockSamplingDir(0.0002,
 				numBuckets,
 				new RobustTreeHs(1),
 				key,
-				Settings.tpchPath + scaleFactor + "/");
+				Settings.tpchPath + tpchSize + "/");
 	}
 
 	public void testWritePartitionsFromIndex(String partitionsId) {
@@ -227,9 +227,9 @@ public class TestIndexBuilder extends TestCase {
 		System.out.println("PARTITIONING TOTAL for replica: " + (System.nanoTime() - start) / 1E9);
 	}
 
-	public void testBuildReplicatedRobustTree(int scaleFactor, int numReplicas){
+	public void testBuildReplicatedRobustTree(int tpchSize, int numReplicas){
 		int bucketSize = 64; // 64 mb
-		int numBuckets = (scaleFactor * 759) / bucketSize + 1;
+		int numBuckets = tpchSize / bucketSize + 1;
 		ConfUtils cfg = new ConfUtils(Settings.cartilageConf);
 		CuratorFramework client = CuratorUtils.createAndStartClient(cfg.getZOOKEEPER_HOSTS());
 		CuratorUtils.deleteAll(client, "/", "partition-");
@@ -245,7 +245,35 @@ public class TestIndexBuilder extends TestCase {
 		);
 	}
 
-	public void testBuildReplicatedRobustTreeFromSamples(int scaleFactor, int numReplicas) {
+	public void testBuildRobustTreeFromSamples(int tpchSize) {
+
+		int bucketSize = 64; // 64 mb
+		int numBuckets = tpchSize / bucketSize + 1;
+
+		ConfUtils conf = new ConfUtils(propertiesFile);
+		FileSystem fs = HDFSUtils.getFS(conf.getHADOOP_HOME() + "/etc/hadoop/core-site.xml");
+		long startTime = System.nanoTime();
+
+		// read all the sample files and put them into the sample key set
+		CartilageIndexKeySet sample = new CartilageIndexKeySet();
+		try {
+			RemoteIterator<LocatedFileStatus> files = fs.listFiles(new Path(conf.getHDFS_HOMEDIR()), false);
+			while (files.hasNext()) {
+				String path = files.next().getPath().toString();
+				byte[] bytes = HDFSUtils.readFile(fs, path);
+				sample.unmarshall(bytes);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		RobustTreeHs index = new RobustTreeHs(1);
+		System.out.println("BUILD: scan sample time = " + ((System.nanoTime() - startTime) / 1E9));
+
+		builder.buildWithSample(sample, numBuckets, index, getHDFSWriter(hdfsPartitionDir, (short)replication));
+	}
+
+	public void testBuildReplicatedRobustTreeFromSamples(int tpchSize, int numReplicas) {
 		ConfUtils cfg = new ConfUtils(Settings.cartilageConf);
 		FileSystem fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
 		List<String> paths = new ArrayList<String>();
@@ -263,7 +291,7 @@ public class TestIndexBuilder extends TestCase {
 		}
 		//String sample = new String(HDFSUtils.readFile(fs, Settings.hdfsPartitionDir+"/sample"));
 		int bucketSize = 64; // 64 mb
-		int numBuckets = (scaleFactor * Settings.tpchSize) / bucketSize + 1;
+		int numBuckets = tpchSize / bucketSize + 1;
 		builder.buildReplicatedWithSample(
 				samples,
 				numBuckets,
@@ -280,9 +308,9 @@ public class TestIndexBuilder extends TestCase {
 		TestIndexBuilder t = new TestIndexBuilder();
 		t.setUp();
 		t.testWritePartitionsFromIndexReplicated(args[args.length - 1]);
-		//int scaleFactor = Integer.parseInt(args[args.length - 1]);
-		//t.testBuildKDMedianTreeBlockSamplingOnly(scaleFactor);
+		//int tpchSize = Integer.parseInt(args[args.length - 1]); // size of table, in MB
+		//t.testBuildKDMedianTreeBlockSamplingOnly(tpchSize);
 		//t.testBuildRobustTreeBlockSampling();
-		//t.testBuildReplicatedRobustTreeFromSamples(scaleFactor, 3);
+		//t.testBuildReplicatedRobustTreeFromSamples(tpchSize, 3);
 	}
 }

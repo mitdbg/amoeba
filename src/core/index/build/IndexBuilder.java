@@ -2,7 +2,6 @@ package core.index.build;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -343,6 +342,20 @@ public class IndexBuilder {
 		System.out.println("Index+Sample Write Time = "+time4+" sec");
 
 		System.out.println("Total time = " + (time1 + time2 + time4) + " sec");
+	}
+
+	public void buildWithSample(CartilageIndexKeySet sample, int numBuckets, MDIndex index, PartitionWriter writer) {
+		index.initBuild(numBuckets);
+		((RobustTreeHs)index).loadSample(sample);
+
+		long startTime = System.nanoTime();
+		index.initProbe();
+		System.out.println("BUILD: index building time = " + ((System.nanoTime() - startTime) / 1E9));
+
+		startTime = System.nanoTime();
+		byte[] indexBytes = index.marshall();
+		writer.writeToPartition("index", indexBytes, 0, indexBytes.length);
+		System.out.println("BUILD: index writing time = " + ((System.nanoTime() - startTime) / 1E9));
 	}
 
 }
