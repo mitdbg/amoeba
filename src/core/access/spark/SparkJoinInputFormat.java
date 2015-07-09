@@ -3,9 +3,7 @@ package core.access.spark;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import core.utils.CuratorUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -20,7 +18,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import core.access.AccessMethod;
 import core.access.AccessMethod.PartitionSplit;
@@ -31,6 +28,7 @@ import core.access.iterator.IteratorRecord;
 import core.access.iterator.PartitionIterator;
 import core.utils.HDFSUtils;
 import core.utils.SchemaUtils.TYPE;
+import scala.Tuple2;
 
 public class SparkJoinInputFormat extends SparkInputFormat {
 
@@ -85,23 +83,23 @@ public class SparkJoinInputFormat extends SparkInputFormat {
 			} catch (NumberFormatException e) {
 			}
 		}
-		
+
 		// read the splits for the larger input from a file
-		Map<String,List<Integer>> predicateSplit = parsePredicateRanges(partitionIdFile, queryConf.getHadoopHome());
+		List<Tuple2<String, List<Integer>>> predicateSplit = parsePredicateRanges(partitionIdFile, queryConf.getHadoopHome());
 		
 		AccessMethod am = new AccessMethod();
 		queryConf.setDataset(joinInput1);
 		am.init(queryConf);
 		
 		List<InputSplit> finalSplits = new ArrayList<InputSplit>();
-		for(String p: predicateSplit.keySet()){
+		for(Tuple2<String, List<Integer>> p: predicateSplit){
 			
 			List<Path> splitFiles = Lists.newArrayList();
 			List<Long> lengths = Lists.newArrayList();
 			
 			// lookup the predicate in the smaller table (filter query)
-			long lowVal = Long.parseLong(p.split(",")[0]);
-			long highVal = Long.parseLong(p.split(",")[1]);
+			long lowVal = Long.parseLong(p._1().split(",")[0]);
+			long highVal = Long.parseLong(p._1().split(",")[1]);
 			Predicate lookupPred1 = new Predicate(joinKey1, TYPE.LONG, lowVal, PREDTYPE.GT);
 			Predicate lookupPred2 = new Predicate(joinKey1, TYPE.LONG, highVal, PREDTYPE.LEQ);
 			System.out.println("predicate1: "+lookupPred1);
@@ -127,7 +125,7 @@ public class SparkJoinInputFormat extends SparkInputFormat {
 
 
 			// add files from the larger input (probe input)
-			for(Integer input1Id: predicateSplit.get(p)){
+			for(Integer input1Id: p._2()){
 				for(FileStatus fs: partitionIdFileMap2.get(input1Id)){ // CHECK: changed from Map1 to Map2
 					//System.out.println("probe "+fs.getPath());
 					splitFiles.add(fs.getPath());
@@ -151,9 +149,8 @@ public class SparkJoinInputFormat extends SparkInputFormat {
 		return finalSplits;
 	}
 	
-	protected Map<String,List<Integer>> parsePredicateRanges(String hdfsFilename, String hadoopHome){
-		
-		Map<String,List<Integer>> predicatePartitionIds = Maps.newHashMap();
+	protected List<Tuple2<String, List<Integer>>> parsePredicateRanges(String hdfsFilename, String hadoopHome){
+		List<Tuple2<String, List<Integer>>> predicatePartitionIds = new ArrayList<Tuple2<String, List<Integer>>>();
 		
 		List<String> lines = HDFSUtils.readHDFSLines(hadoopHome, hdfsFilename);
 		for(String line: lines){
@@ -161,7 +158,7 @@ public class SparkJoinInputFormat extends SparkInputFormat {
 			List<Integer> partitionIds = Lists.newArrayList();
 			for(String idStr: tokens[0].split(","))
 				partitionIds.add(Integer.parseInt(idStr));
-			predicatePartitionIds.put(tokens[1]+","+tokens[2], partitionIds);
+			predicatePartitionIds.add(new Tuple2(tokens[1]+","+tokens[2], partitionIds));
 		}
 		
 		return predicatePartitionIds;
