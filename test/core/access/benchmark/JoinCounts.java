@@ -145,9 +145,8 @@ public class JoinCounts {
                 partOverlap += thisPart;
                 lineOverlap += thisLine;
                 System.out.println("Range " + tokens[1] + "," + tokens[2]);
-                System.out.println(small + ": " + thisPart);
-                System.out.println(big + ": " + thisLine + "\n");
-                //System.out.println(thisPart+thisLine+"\n");
+                System.out.println(thisPart+","+thisLine);
+                System.out.println(thisPart+thisLine+"\n");
 
             }
         } catch (Exception e) {

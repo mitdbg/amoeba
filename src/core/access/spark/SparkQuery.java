@@ -31,9 +31,9 @@ public class SparkQuery {
 								.setSparkHome(cfg.getSPARK_HOME())
 								.setJars(new String[]{cfg.getSPARK_JAR()})
 								.set("spark.hadoop.cloneConf", "false")
-								.set("spark.executor.memory", "100g")
+								.set("spark.executor.memory", "150g")
 								.set("spark.driver.memory", "10g")
-								.set("spark.task.cpus", "16");
+								.set("spark.task.cpus", "32");
 				
 
 		ctx = new JavaSparkContext(sconf);

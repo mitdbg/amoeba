@@ -16,6 +16,8 @@ public class SparkHashJoin<K,V> implements Serializable{
     private Multimap<K, V> buildPhase;
     private int firstRelation;
     long count;
+    long start;
+    long end;
     
     private List<Tuple2<V,V>> joinResults;
 
@@ -24,12 +26,17 @@ public class SparkHashJoin<K,V> implements Serializable{
         joinResults = Lists.newArrayList();
         this.firstRelation = firstRelation;
         count = 0;
+        start = System.currentTimeMillis();
     }
 
     public boolean add(int relationId, K joinKey, V record) throws RuntimeException {
         if (relationId == firstRelation) 
         	buildPhase.put(joinKey, record);
         else {
+            if (end == 0) {
+                end = System.currentTimeMillis();
+                System.out.println("INFO: join scan and probe time "+(end-start));
+            }
         	Collection<V> curRecords = buildPhase.get(joinKey);
             if (curRecords != null) {
                 for (V r : curRecords)
