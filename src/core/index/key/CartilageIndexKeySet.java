@@ -92,6 +92,18 @@ public class CartilageIndexKeySet {
 		return values.get(values.size() - 1)[dim];
 	}
 
+	public Object[] getCutpoints(int dim, int numParts) {
+		Object[] cutpoints = new Object[numParts+1];
+		this.sort(dim);
+		cutpoints[0] = this.getFirst(dim);
+		cutpoints[numParts] = this.getLast(dim);
+		int partLength = this.values.size() / numParts;
+		for (int i = 1; i <= numParts - 1; i++) {
+			cutpoints[i] = this.values.get(i*partLength)[dim];
+		}
+		return cutpoints;
+	}
+
 	public Comparator<Object[]> getComparatorForType(TYPE type, final int attributeIdx) {
 		switch(type){
 		case INT:

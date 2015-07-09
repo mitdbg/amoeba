@@ -5,6 +5,7 @@ import java.util.*;
 import core.access.Predicate;
 import core.index.MDIndex.Bucket;
 import core.index.key.MDIndexKey;
+import core.utils.Range;
 import core.utils.RangeUtils.SimpleDateRange.SimpleDate;
 import core.utils.SchemaUtils.TYPE;
 import core.utils.TypeUtils;
@@ -18,7 +19,7 @@ public class RNode {
     public int attribute;
     public TYPE type;
     public Object value;
-	Map<Integer, List<Object>> valuesByAttribute = new HashMap<Integer, List<Object>>();
+	Map<Integer, Range> rangesByAttribute = new HashMap<Integer, Range>();
 
     // Not used - left for legacy
     public float quantile;
@@ -242,9 +243,7 @@ public class RNode {
 			// For string tokens; we may have to read more than one token, so read till end of line
 			this.value = TypeUtils.deserializeValue(this.type, sc.nextLine().trim());
 
-			if (!this.valuesByAttribute.containsKey(this.attribute)) {
-				this.valuesByAttribute.put(this.attribute, new ArrayList<Object>());
-			}
+			boolean exists = this.rangesByAttribute.containsKey(this.attribute);
 
 			this.leftChild = new RNode();
 			this.leftChild.parent = this;
@@ -252,13 +251,18 @@ public class RNode {
 			this.rightChild = new RNode();
 			this.rightChild.parent = this;
 
-			for (Map.Entry<Integer, List<Object>> entry : this.valuesByAttribute.entrySet()) {
-				this.leftChild.valuesByAttribute.put(entry.getKey(), new ArrayList<Object>(entry.getValue()));
-				this.rightChild.valuesByAttribute.put(entry.getKey(), new ArrayList<Object>(entry.getValue()));
+			for (Map.Entry<Integer, Range> entry : this.rangesByAttribute.entrySet()) {
+				this.leftChild.rangesByAttribute.put(entry.getKey(), entry.getValue().clone());
+				this.rightChild.rangesByAttribute.put(entry.getKey(), entry.getValue().clone());
 			}
 
-			this.leftChild.valuesByAttribute.get(this.attribute).add("<= "+this.value.toString());
-			this.rightChild.valuesByAttribute.get(this.attribute).add("> " + this.value.toString());
+			if (exists) {
+				this.leftChild.rangesByAttribute.get(this.attribute).intersect(new Range(this.type, null, this.value));
+				this.rightChild.rangesByAttribute.get(this.attribute).intersect(new Range(this.type, this.value, null));
+			} else {
+				this.leftChild.rangesByAttribute.put(this.attribute, new Range(this.type, null, this.value));
+				this.rightChild.rangesByAttribute.put(this.attribute, new Range(this.type, this.value, null));
+			}
 
 			this.leftChild.parseNode(sc);
 			this.rightChild.parseNode(sc);

@@ -1,8 +1,15 @@
 package core.index.robusttree;
 
+import core.index.Settings;
+import core.utils.ConfUtils;
+import core.utils.HDFSUtils;
+import core.utils.Range;
+import core.utils.SchemaUtils;
 import junit.framework.TestCase;
+import org.apache.hadoop.fs.FileSystem;
 
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * Created by qui on 7/4/15.
@@ -34,8 +41,31 @@ public class TestRobustTreeHs extends TestCase {
     public void testBucketRanges() {
         RobustTreeHs index = new RobustTreeHs(1);
         index.unmarshall(testTree1.getBytes());
-        index.printBucketRanges(1);
-        // TODO: make bucket ranges returned more meaningful
+        Map<Integer, Range> ranges1 = index.getBucketRanges(1);
+        System.out.println(ranges1);
+        Range[] expected = new Range[]{
+                new Range(SchemaUtils.TYPE.INT, null, 32),
+                new Range(SchemaUtils.TYPE.INT, null, 32),
+                new Range(SchemaUtils.TYPE.INT, null, 18),
+                new Range(SchemaUtils.TYPE.INT, 18, 32),
+                new Range(SchemaUtils.TYPE.INT, 32, null),
+                new Range(SchemaUtils.TYPE.INT, 32, null)
+        };
+        for (int i = 1; i <= 6; i++) {
+            assertEquals(ranges1.get(i), expected[i-1]);
+        }
+        for (int i = 7; i <= 8; i++) {
+            assertTrue(!ranges1.containsKey(i));
+        }
+    }
+
+    public void testBucketRangesFile() {
+        FileSystem fs = HDFSUtils.getFSByHadoopHome((new ConfUtils(Settings.cartilageConf)).getHADOOP_HOME());
+        byte[] indexBytes = HDFSUtils.readFile(fs, "/user/qui/orders/index");
+        RobustTreeHs index = new RobustTreeHs(1);
+        index.unmarshall(indexBytes);
+        System.out.println(index.getBucketRanges(0));
+        System.out.println(Arrays.toString(index.getAllocations()));
     }
 
     public void testGetAllocations() {

@@ -8,6 +8,7 @@ import core.index.key.CartilageIndexKey;
 import core.index.key.CartilageIndexKeySet;
 import core.index.key.MDIndexKey;
 import core.utils.Pair;
+import core.utils.Range;
 import core.utils.SchemaUtils.TYPE;
 
 public class RobustTreeHs implements MDIndex {
@@ -393,20 +394,21 @@ public class RobustTreeHs implements MDIndex {
 		}
 	}
 
-	public void printBucketRanges(int attribute) {
-		printBucketRangeSubtree(this.getRoot(), attribute);
+	public Map<Integer, Range> getBucketRanges(int attribute) {
+		return getBucketRangeSubtree(this.getRoot(), attribute);
 	}
 
-	private static void printBucketRangeSubtree(RNode root, int attribute) {
+	private static Map<Integer, Range> getBucketRangeSubtree(RNode root, int attribute) {
 		if (root.bucket != null) {
-			if (root.valuesByAttribute.get(attribute) == null) {
-				System.out.println(root.bucket.getBucketId()+": []");
-			} else {
-				System.out.println(root.bucket.getBucketId()+": "+root.valuesByAttribute.get(attribute).toString());
+			Map<Integer, Range> bucketRanges = new HashMap<Integer, Range>();
+			if (root.rangesByAttribute.get(attribute) != null) {
+				bucketRanges.put(root.bucket.getBucketId(), root.rangesByAttribute.get(attribute));
 			}
+			return bucketRanges;
 		} else {
-			printBucketRangeSubtree(root.leftChild, attribute);
-			printBucketRangeSubtree(root.rightChild, attribute);
+			Map<Integer, Range> bucketRanges = getBucketRangeSubtree(root.leftChild, attribute);
+			bucketRanges.putAll(getBucketRangeSubtree(root.rightChild, attribute));
+			return bucketRanges;
 		}
 	}
 
