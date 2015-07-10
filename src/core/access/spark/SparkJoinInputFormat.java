@@ -42,8 +42,8 @@ public class SparkJoinInputFormat extends SparkInputFormat {
 	private static final long serialVersionUID = 1L;
 	private static final Log LOG = LogFactory.getLog(FileInputFormat.class);
 
-	private static final long MAX_SPLIT_SIZE = 20000 * 1000000L;
-	private static final int SPLIT_FANOUT = 8;
+	private static final long MAX_SPLIT_SIZE = 160000 * 1000000L;
+	private static final int SPLIT_FANOUT = 4;
 	private static final double OVERLAP_THRESHOLD = 0.75;
 	
 	String joinInput1;	// smaller input
@@ -281,11 +281,21 @@ public class SparkJoinInputFormat extends SparkInputFormat {
 			List<MDIndex.BucketInfo> buckets = r.getBuckets();
 			System.out.println(buckets.size() + " buckets in "+r);
 
+			long bucketSize = 0;
+			for (MDIndex.BucketInfo bucket : buckets) {
+				List<FileStatus> files = partitionFileStatuses.get(bucket.getId());
+				for (FileStatus f : files) {
+					bucketSize += f.getLen();
+				}
+			}
+			int numSplitsRequired = (int) (bucketSize / MAX_SPLIT_SIZE + 1);
+			long goalSize = bucketSize / numSplitsRequired + 1;
+
 			int currentIndex = 0;
 			List<Integer> currentBuckets = new ArrayList<Integer>();
 			long totalSize = 0;
 			while (currentIndex < buckets.size()) {
-				while (totalSize < MAX_SPLIT_SIZE && currentIndex < buckets.size()) {
+				while (totalSize < goalSize && currentIndex < buckets.size()) {
 					MDIndex.BucketInfo bucket = buckets.get(currentIndex);
 					List<FileStatus> files = partitionFileStatuses.get(bucket.getId());
 					currentBuckets.add(bucket.getId());
