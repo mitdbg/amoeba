@@ -1,4 +1,6 @@
 package core.index;
+import core.utils.Range;
+import core.utils.SchemaUtils;
 import org.apache.curator.framework.CuratorFramework;
 
 import core.index.key.CartilageIndexKeySet;
@@ -207,4 +209,32 @@ public interface MDIndex {
 	 */
 	public void unmarshall(byte[] bytes);
 
+	/**
+     * Created by qui on 7/9/15.
+     */
+	class BucketInfo extends Range {
+
+        private int id;
+
+        public BucketInfo(int id, SchemaUtils.TYPE type, Object low, Object high) {
+            super(type, low, high);
+            this.id = id;
+        }
+
+        public BucketInfo(SchemaUtils.TYPE type, Object low, Object high) {
+            this(0, type, low, high);
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+		public BucketInfo clone() {
+			return new BucketInfo(id, getType(), getLow(), getHigh());
+		}
+    }
 }

@@ -132,9 +132,9 @@ public class SparkQuery {
 		return createRDD(hdfsPath, ps);
 	}
 
-	public JavaRDD<?> createJoinRDD(String partitionIdFile, String hdfsPath1, int rid1, int joinAttribute1, String hdfsPath2, int rid2, int joinAttribute2){
+	public JavaRDD<?> createJoinRDD(boolean assignBuckets, String hdfsPath1, int rid1, int joinAttribute1, String hdfsPath2, int rid2, int joinAttribute2){
 
-		ctx.hadoopConfiguration().set("PARTITION_ID_FILE", partitionIdFile);
+		ctx.hadoopConfiguration().setBoolean("ASSIGN_BUCKETS", assignBuckets);
 		ctx.hadoopConfiguration().set("JOIN_INPUT1", hdfsPath1);
 		ctx.hadoopConfiguration().set("JOIN_INPUT2", hdfsPath2);
 		ctx.hadoopConfiguration().set("JOIN_CONDITION", rid1+"."+joinAttribute1+"="+rid2+"."+joinAttribute2);
@@ -174,7 +174,9 @@ public class SparkQuery {
 				hj.add(rid, getKey(rid,t._2()), getValue(rid,t._2()));
 			}
 			// return result
-			return hj.getJoinResults();
+			Iterable<Tuple2<V,V>> result = hj.getJoinResults();
+			hj.clear();
+			return result;
 		}
 		protected abstract K getKey(int rid, IteratorRecord r);
 		protected abstract V getValue(int rid, IteratorRecord r);

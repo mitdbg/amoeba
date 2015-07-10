@@ -25,7 +25,7 @@ public class TestJoinQueries extends TestCase {
 	public void testOrderLineitemJoin() {
 		System.out.println("INFO: Running ORDERS, LINEITEM join Query");
 		long start = System.currentTimeMillis();
-		long result = sq.createJoinRDD("/user/anil/lineitem_orders_join",
+		long result = sq.createJoinRDD(true,
 				"/user/anil/orders/0",
 				0,
 				0,
@@ -40,7 +40,7 @@ public class TestJoinQueries extends TestCase {
 	public void testPartLineitemJoin(){
 		System.out.println("INFO: Running PART, LINEITEM join Query");
 		long start = System.currentTimeMillis();
-		long result = sq.createJoinRDD("/user/anil/lineitem_part_join",
+		long result = sq.createJoinRDD(true,
 				"/user/anil/part/0",
 				0,
 				0,
@@ -71,12 +71,12 @@ public class TestJoinQueries extends TestCase {
 		JavaPairRDD<LongWritable, IteratorRecord> lineitem = sq.createScanRDD("/user/anil/repl/0", new Predicate[]{new Predicate(0, SchemaUtils.TYPE.LONG, -1L, Predicate.PREDTYPE.GT)});
 
 		long start = System.currentTimeMillis();
-		part.mapToPair(new MapToKeyFunction(0));
-		lineitem.mapToPair(new MapToKeyFunction(1));
+		JavaPairRDD<String, String> partKey = part.mapToPair(new MapToKeyFunction(0));
+		JavaPairRDD<String, String> lineKey = lineitem.mapToPair(new MapToKeyFunction(1));
 		System.out.println("JOIN PART-LINEITEM: time to map to keys " + (System.currentTimeMillis() - start));
 
 		start = System.currentTimeMillis();
-		long result = lineitem.join(part).count();
+		long result = lineKey.join(partKey).count();
 		System.out.println("JOIN PART-LINEITEM: time "+(System.currentTimeMillis()-start)+" result "+result);
 	}
 

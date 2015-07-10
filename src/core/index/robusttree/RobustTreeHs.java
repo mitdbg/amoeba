@@ -8,7 +8,6 @@ import core.index.key.CartilageIndexKey;
 import core.index.key.CartilageIndexKeySet;
 import core.index.key.MDIndexKey;
 import core.utils.Pair;
-import core.utils.Range;
 import core.utils.SchemaUtils.TYPE;
 
 public class RobustTreeHs implements MDIndex {
@@ -394,19 +393,19 @@ public class RobustTreeHs implements MDIndex {
 		}
 	}
 
-	public Map<Integer, Range> getBucketRanges(int attribute) {
+	public Map<Integer, BucketInfo> getBucketRanges(int attribute) {
 		return getBucketRangeSubtree(this.getRoot(), attribute);
 	}
 
-	private static Map<Integer, Range> getBucketRangeSubtree(RNode root, int attribute) {
+	private static Map<Integer, BucketInfo> getBucketRangeSubtree(RNode root, int attribute) {
 		if (root.bucket != null) {
-			Map<Integer, Range> bucketRanges = new HashMap<Integer, Range>();
+			Map<Integer, BucketInfo> bucketRanges = new HashMap<Integer, BucketInfo>();
 			if (root.rangesByAttribute.get(attribute) != null) {
 				bucketRanges.put(root.bucket.getBucketId(), root.rangesByAttribute.get(attribute));
 			}
 			return bucketRanges;
 		} else {
-			Map<Integer, Range> bucketRanges = getBucketRangeSubtree(root.leftChild, attribute);
+			Map<Integer, BucketInfo> bucketRanges = getBucketRangeSubtree(root.leftChild, attribute);
 			bucketRanges.putAll(getBucketRangeSubtree(root.rightChild, attribute));
 			return bucketRanges;
 		}
