@@ -68,6 +68,9 @@ public class SparkQueryConf {
 	}
 
 	public Predicate[] getPredicates(){
+		if (conf.get(PREDICATES).equals("")) {
+			return new Predicate[0];
+		}
 		String[] tokens = conf.get(PREDICATES).split(",");
 		Predicate[] predicates = new Predicate[tokens.length];
 		for(int i=0; i<predicates.length; i++)

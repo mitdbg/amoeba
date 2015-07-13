@@ -15,6 +15,8 @@ import core.access.iterator.IteratorRecord;
 
 public class Query implements Serializable{
 	private static final long serialVersionUID = 1L;
+
+	private static final String EMPTY = "empty";
 	
 	protected Predicate[] predicates;
 	protected CartilageIndexKey key;
@@ -24,18 +26,27 @@ public class Query implements Serializable{
 	}
 
 	public void write(DataOutput out) throws IOException{
-		Text.writeString(out, Joiner.on(";").join(predicates));
+		if (predicates.length == 0) {
+			Text.writeString(out, EMPTY);
+		} else {
+			Text.writeString(out, Joiner.on(";").join(predicates));
+		}
 		Text.writeString(out, key.toString());
 		//out.writeBytes(Joiner.on(",").join(predicates)+"\n");
 	}
 
 	public void readFields(DataInput in) throws IOException{
-		String[] tokens = Text.readString(in).split(";");
+		String predicateStrings = Text.readString(in);
+		if (predicateStrings.equals(EMPTY)) {
+			predicates = new Predicate[0];
+		} else {
+			String[] tokens = predicateStrings.split(";");
+			predicates = new Predicate[tokens.length];
+			for (int i = 0; i < predicates.length; i++)
+				predicates[i] = new Predicate(tokens[i]);
+		}
 		key = new CartilageIndexKey(Text.readString(in));
 		//String[] tokens = in.readLine().split(",");
-		predicates = new Predicate[tokens.length];
-		for(int i=0; i<predicates.length; i++)
-			predicates[i] = new Predicate(tokens[i]);
 	}
 	
 
