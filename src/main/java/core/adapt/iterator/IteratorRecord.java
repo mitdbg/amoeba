@@ -18,10 +18,6 @@ import core.common.key.RawIndexKey;
 public class IteratorRecord extends RawIndexKey implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	public IteratorRecord() {
-		super('|');
-	}
-
 	public IteratorRecord(char delimiter) {
 		super(delimiter);
 	}

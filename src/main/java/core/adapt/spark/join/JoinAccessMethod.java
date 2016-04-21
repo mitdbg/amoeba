@@ -3,7 +3,6 @@ package core.adapt.spark.join;
 import core.adapt.AccessMethod.PartitionSplit;
 import core.adapt.JoinQuery;
 import core.adapt.Predicate;
-import core.adapt.iterator.PartitionIterator;
 
 import core.adapt.opt.JoinOptimizer;
 import core.common.globals.Globals;

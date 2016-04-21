@@ -15,7 +15,6 @@ import com.google.common.io.ByteStreams;
 
 import core.adapt.HDFSPartition;
 import core.adapt.Partition;
-import core.adapt.Predicate;
 import core.common.globals.Globals;
 import core.utils.BinaryUtils;
 import core.utils.ReflectionUtils;
@@ -36,8 +35,6 @@ public class PartitionIterator implements Iterator<IteratorRecord> {
 	protected int bytesLength, offset, previous;
 
 	protected Partition partition;
-
-	protected Predicate[] predicates;
 
 	protected Query query;
 
@@ -103,7 +100,6 @@ public class PartitionIterator implements Iterator<IteratorRecord> {
 
 				previous = ++offset;
 				if (isRelevant(record)) {
-					// System.out.println("relevant record found ..");
 					return true;
 				} else
 					continue;

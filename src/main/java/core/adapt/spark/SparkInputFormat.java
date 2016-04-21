@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import core.adapt.iterator.PartitionIterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
@@ -30,7 +31,6 @@ import com.google.common.primitives.Ints;
 import core.adapt.AccessMethod;
 import core.adapt.AccessMethod.PartitionSplit;
 import core.adapt.iterator.IteratorRecord;
-import core.adapt.iterator.PartitionIterator;
 import core.adapt.iterator.RepartitionIterator;
 import core.utils.ReflectionUtils;
 

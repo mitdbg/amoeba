@@ -6,6 +6,7 @@ import java.util.*;
 
 import core.adapt.JoinQuery;
 import core.adapt.iterator.JoinRepartitionIterator;
+import core.adapt.iterator.PartitionIterator;
 import core.adapt.spark.join.SparkJoinQueryConf;
 import core.common.globals.TableInfo;
 import core.common.index.JRNode;
@@ -15,7 +16,6 @@ import org.apache.hadoop.fs.Path;
 
 import core.adapt.Predicate;
 import core.adapt.AccessMethod.PartitionSplit;
-import core.adapt.iterator.PartitionIterator;
 import core.adapt.iterator.PostFilterIterator;
 import core.adapt.iterator.RepartitionIterator;
 

@@ -5,8 +5,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import core.common.globals.Globals;
 import core.common.index.JRNode;
@@ -20,8 +18,6 @@ import com.google.common.io.ByteStreams;
 import core.adapt.HDFSPartition;
 import core.adapt.Partition;
 import core.adapt.Query;
-import core.common.index.RNode;
-import core.common.index.RobustTree;
 import core.utils.HDFSUtils;
 
 /**

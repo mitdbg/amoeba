@@ -1,9 +1,8 @@
 package core.adapt.spark.join;
 
 import core.adapt.JoinQuery;
-import core.adapt.Query;
-import core.adapt.iterator.JoinRepartitionIterator;
 import core.adapt.iterator.PartitionIterator;
+import core.adapt.iterator.JoinRepartitionIterator;
 import core.adapt.iterator.PostFilterIterator;
 import core.adapt.spark.SparkQueryConf;
 import core.utils.ReflectionUtils;

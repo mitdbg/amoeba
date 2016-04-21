@@ -31,6 +31,8 @@ public class PostFilterIterator extends PartitionIterator implements
 		}
 	}
 
+	public Query getQuery() { return query; }
+
 	@Override
 	protected boolean isRelevant(IteratorRecord record) {
 		return query.qualifies(record);

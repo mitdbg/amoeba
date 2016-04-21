@@ -3,10 +3,7 @@ package core.adapt.spark.join;
 
 import core.adapt.AccessMethod.PartitionSplit;
 import core.adapt.JoinQuery;
-import core.adapt.iterator.PartitionIterator;
-import core.adapt.iterator.PostFilterIterator;
 import core.utils.HDFSUtils;
-import core.utils.RangePartitionerUtils;
 import core.utils.SparkUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -22,7 +19,6 @@ import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by ylu on 1/6/16.

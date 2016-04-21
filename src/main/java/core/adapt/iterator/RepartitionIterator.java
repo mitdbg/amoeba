@@ -50,21 +50,12 @@ public class RepartitionIterator extends PartitionIterator {
 		super(query);
 	}
 	
-	public RepartitionIterator(Query query, RNode tree) {
-		this.query = query;
-		this.newIndexTree = tree;
-	}
-
 	public void setZookeeper(String zookeeperHosts) {
 		this.zookeeperHosts = zookeeperHosts;
 	}
 
 	public Query getQuery() {
 		return this.query;
-	}
-
-	public RNode getIndexTree() {
-		return this.newIndexTree;
 	}
 
 	/**

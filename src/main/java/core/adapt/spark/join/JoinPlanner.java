@@ -1,15 +1,9 @@
 package core.adapt.spark.join;
 
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.primitives.Ints;
-
 import core.adapt.JoinQuery;
 
 
-import core.adapt.iterator.JoinRepartitionIterator;
 import core.adapt.iterator.PartitionIterator;
 import core.adapt.iterator.PostFilterIterator;
 import core.common.index.JoinRobustTree;
@@ -18,8 +12,6 @@ import core.common.index.MDIndex;
 import core.utils.HDFSUtils;
 import core.utils.RangePartitionerUtils;
 import core.utils.TypeUtils;
-import org.apache.commons.collections.map.HashedMap;
-import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -28,7 +20,6 @@ import org.apache.hadoop.fs.Path;
 import core.adapt.AccessMethod.PartitionSplit;
 
 
-import java.io.File;
 import java.io.IOException;
 
 import java.util.*;
