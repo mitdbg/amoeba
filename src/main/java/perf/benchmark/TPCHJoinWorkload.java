@@ -706,9 +706,9 @@ public class TPCHJoinWorkload {
         //garbageCollect();
     }
 
-    public void joinLineitemWithOrders(boolean repartition){
+    public void joinLineitemWithOrders(boolean repartition) {
 
-        JoinQuery q_o = new JoinQuery(orders, schemaOrders.getAttributeId("o_orderkey"),EmptyPredicates);
+        JoinQuery q_o = new JoinQuery(orders, schemaOrders.getAttributeId("o_orderkey"), EmptyPredicates);
         JoinQuery q_l = new JoinQuery(lineitem, schemaLineitem.getAttributeId("l_orderkey"), EmptyPredicates);
 
 
@@ -728,6 +728,30 @@ public class TPCHJoinWorkload {
         System.out.println("RES: Time Taken: " + (System.currentTimeMillis() - start) + "; Result: " + result);
 
     }
+
+    public void joinLineitemWithPart(boolean repartition) {
+
+        JoinQuery q_p = new JoinQuery(part, schemaPart.getAttributeId("p_partkey"), EmptyPredicates);
+        JoinQuery q_l = new JoinQuery(lineitem, schemaLineitem.getAttributeId("l_partkey"), EmptyPredicates);
+
+
+        q_p.setForceRepartition(repartition);
+        q_l.setForceRepartition(repartition);
+
+        System.out.println("INFO: Query_part:" + q_p.toString());
+        System.out.println("INFO: Query_lineitem:" + q_l.toString());
+
+
+        long start = System.currentTimeMillis();
+
+        JavaPairRDD<LongWritable, Text> rdd = sq.createJoinRDD(lineitem, q_l, "NULL", part, q_p, "NULL", 0);
+
+        long result = rdd.count();
+
+        System.out.println("RES: Time Taken: " + (System.currentTimeMillis() - start) + "; Result: " + result);
+
+    }
+
 
     public void runSwitchingWorkload() {
         for (int i = 0; i < 160; i++) {
@@ -942,21 +966,63 @@ public class TPCHJoinWorkload {
     }
 
 
-
     public void runBufferSize() {
         System.out.println("INFO: Running query, repartition");
 
         joinLineitemWithOrders(true);
 
+        long[] bufferSizes = {32L * 1024 * 1024 * 1024, 16L * 1024 * 1024 * 1024, 8L * 1024 * 1024 * 1024,
+                4L * 1024 * 1024 * 1024, 2L * 1024 * 1024 * 1024, 1L * 1024 * 1024 * 1024,
+                512 * 1024 * 1024, 256 * 1024 * 1024, 128 * 1024 * 1024, 64 * 1024 * 1024};
 
-        long[] bufferSizes = {32L * 1024 * 1024 * 1024, 16L* 1024 * 1024 * 1024, 8L * 1024 * 1024 * 1024,
-                        4L * 1024 * 1024 * 1024, 2L *1024 * 1024 * 1024, 1L * 1024 * 1024 * 1024,
-                        512 * 1024 * 1024, 256 * 1024 * 1024, 128 * 1024 * 1024, 64 * 1024 * 1024};
-
-        for (int i = 0 ;i < bufferSizes.length ;i ++){
+        for (int i = 0; i < bufferSizes.length; i++) {
             sq.setBufferSize(bufferSizes[i]);
             System.out.println("INFO: Running query, buffer size: " + bufferSizes[i]);
             joinLineitemWithOrders(false);
+        }
+
+    }
+
+    public void runVaryingWindowWorkload() {
+
+
+        joinLineitemWithPart(true);
+
+        for (int i = 0; i < 10; i++) {
+            System.out.println("INFO: Running query TPC-H q14");
+            tpch14(false, false);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            double p = (20 - i) / 20.0;
+            if (rand.nextDouble() <= p) {
+                System.out.println("INFO: Running query TPC-H q14");
+                tpch14(false, false);
+            } else {
+                System.out.println("INFO: Running query TPC-H q19");
+                tpch19(false, false);
+            }
+        }
+
+        for (int i = 0; i < 10; i++) {
+            System.out.println("INFO: Running query TPC-H q19");
+            tpch19(false, false);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            double p = (20 - i) / 20.0;
+            if (rand.nextDouble() <= p) {
+                System.out.println("INFO: Running query TPC-H q19");
+                tpch19(false, false);
+            } else {
+                System.out.println("INFO: Running query TPC-H q14");
+                tpch14(false, false);
+            }
+        }
+
+        for (int i = 0; i < 10; i++) {
+            System.out.println("INFO: Running query TPC-H q14");
+            tpch14(false, false);
         }
 
     }
@@ -989,6 +1055,12 @@ public class TPCHJoinWorkload {
                 t.runBufferSize();
                 break;
             case 6:
+                t.runVaryingWindowWorkload();
+                break;
+            case 7:
+                t.joinLineitemWithOrders(false);
+                break;
+            case 8:
                 t.garbageCollect();
                 break;
 

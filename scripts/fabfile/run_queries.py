@@ -74,6 +74,18 @@ def run_tpchjoin():
             ' --conf $CONF  > ~/logs/join_workload.log'
         cmd = fill_cmd(cmd)
         run(cmd)
+        
+@roles('master')
+def run_tpchcopartitionedjoin():
+    with cd(env.conf['HADOOPBIN']):
+        submit_script_path = "/home/mdindex/spark-1.6.0-bin-hadoop2.6/bin/spark-submit"
+        cmd = submit_script_path + ' --class perf.benchmark.TPCHCopartitionedWorkload --deploy-mode client --master spark://128.30.77.86:7077 $JAR ' + \
+            ' --schemaLineitem "$SCHEMALINEITEM"'  + \
+            ' --schemaOrders "$SCHEMAORDERS"'  + \
+            ' --method 1' + \
+            ' --conf $CONF  > ~/logs/join_workload.log'
+        cmd = fill_cmd(cmd)
+        run(cmd)
 
 @roles('master')
 def run_cmtjoin():

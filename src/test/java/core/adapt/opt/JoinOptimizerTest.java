@@ -133,7 +133,7 @@ public class JoinOptimizerTest {
     }
 
 
-    private static JoinQuery tpch6(){
+    private static JoinQuery tpch6() {
         int year_6 = 1993 + rand.nextInt(5);
         TypeUtils.SimpleDate d6_1 = new TypeUtils.SimpleDate(year_6, 1, 1);
         TypeUtils.SimpleDate d6_2 = new TypeUtils.SimpleDate(year_6 + 1, 1, 1);
@@ -150,7 +150,7 @@ public class JoinOptimizerTest {
 
     }
 
-    private static JoinQuery tpch8(){
+    private static JoinQuery tpch8() {
         int rand_8_1 = rand.nextInt(regionNameVals.length);
         String r_name_8 = regionNameVals[rand_8_1];
         TypeUtils.SimpleDate d8_1 = new TypeUtils.SimpleDate(1995, 1, 1);
@@ -166,7 +166,7 @@ public class JoinOptimizerTest {
         JoinQuery q_c = null;
         JoinQuery q_l = new JoinQuery(lineitem, schemaLineitem.getAttributeId("l_partkey"), new Predicate[]{});
 
-        return  q_l;
+        return q_l;
     }
 
     private static JoinQuery tpch10() {
@@ -205,6 +205,9 @@ public class JoinOptimizerTest {
             q_l = new JoinQuery(lineitem, schemaLineitem.getAttributeId("l_orderkey"), new Predicate[]{p1_12, p2_12, p3_12});
         }
 
+        q_l = new JoinQuery(lineitem, schemaLineitem.getAttributeId("l_orderkey"), new Predicate[]{p2_12, p3_12});
+
+
         System.out.println("INFO: Query_lineitem:" + q_l.toString());
 
         return q_l;
@@ -219,7 +222,7 @@ public class JoinOptimizerTest {
         TypeUtils.SimpleDate d14_2 = new TypeUtils.SimpleDate(year_14 + monthOffset_14 / 12, monthOffset_14 % 12 + 1, 1);
         Predicate p1_14 = new Predicate(schemaLineitem.getAttributeId("l_shipdate"), TypeUtils.TYPE.DATE, d14_1, Predicate.PREDTYPE.GEQ);
         Predicate p2_14 = new Predicate(schemaLineitem.getAttributeId("l_shipdate"), TypeUtils.TYPE.DATE, d14_2, Predicate.PREDTYPE.LT);
-        JoinQuery q_l = new JoinQuery(lineitem,  schemaLineitem.getAttributeId("l_partkey"), new Predicate[]{p1_14, p2_14});
+        JoinQuery q_l = new JoinQuery(lineitem, schemaLineitem.getAttributeId("l_partkey"), new Predicate[]{p1_14, p2_14});
         return q_l;
     }
 
@@ -277,7 +280,6 @@ public class JoinOptimizerTest {
     }
 
 
-
     public static ArrayList<ArrayList<JoinQuery>> generateWorkload(ConfUtils cfg) {
         byte[] stringBytes = HDFSUtils.readFile(
                 HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME()),
@@ -286,7 +288,7 @@ public class JoinOptimizerTest {
         String queriesString = new String(stringBytes);
         String[] queries = queriesString.split("\n");
         ArrayList<ArrayList<JoinQuery>> ret = new ArrayList<ArrayList<JoinQuery>>();
-        for (int i=0; i<queries.length; i++) {
+        for (int i = 0; i < queries.length; i++) {
             String query = queries[i];
             String[] predicates = query.split(";");
             ArrayList<Predicate> mhPreds = new ArrayList<Predicate>();
@@ -294,8 +296,8 @@ public class JoinOptimizerTest {
 
             ArrayList<JoinQuery> q = new ArrayList<JoinQuery>();
 
-            for (int j=0; j<predicates.length; j++) {
-                if(predicates[j].startsWith(MH)){
+            for (int j = 0; j < predicates.length; j++) {
+                if (predicates[j].startsWith(MH)) {
                     Predicate p = getPredicate(schemaMH, predicates[j]);
                     mhPreds.add(p);
                 } else {
@@ -307,7 +309,7 @@ public class JoinOptimizerTest {
             Predicate[] mhArray = mhPreds.toArray(new Predicate[mhPreds.size()]);
             Predicate[] sfArray = sfPreds.toArray(new Predicate[sfPreds.size()]);
 
-            JoinQuery q_mh = new JoinQuery(MH, schemaMH.getAttributeId("mh_id"),  mhArray);
+            JoinQuery q_mh = new JoinQuery(MH, schemaMH.getAttributeId("mh_id"), mhArray);
             JoinQuery q_sf = new JoinQuery(SF, schemaSF.getAttributeId("sf_id"), sfArray);
 
             q.add(q_mh);
@@ -320,124 +322,153 @@ public class JoinOptimizerTest {
     }
 
 
-    public static void testTPCH(){
+    public static void testTPCH() {
         setup();
+
+        Predicate[] EmptyPredicates = {};
 
         ConfUtils cfg = new ConfUtils("/Users/ylu/Documents/workspace/mdindex/conf/ylu.properties");
         FileSystem fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
         Globals.loadTableInfo(lineitem, cfg.getHDFS_WORKING_DIR(), fs);
         TableInfo tableInfo = Globals.getTableInfo(lineitem);
 
-
         JoinRobustTree.randGenerator.setSeed(0);
 
 
-        for (int i = 0; i < 100; i++) {
-
-            JoinQuery q = tpch10();
-            System.out.printf("TPCH12 Query %d: %s\n", i, q);
-            // Load table info.
-
-            if(i==0){
-                q.setForceRepartition(true);
-            }
 
 
-            JoinOptimizer opt = new JoinOptimizer(cfg);
+        JoinQuery q_l = new JoinQuery(lineitem, schemaLineitem.getAttributeId("l_partkey"), EmptyPredicates);
+        q_l.setForceRepartition(true);
+
+
+        JoinOptimizer opt = new JoinOptimizer(cfg);
+        opt.loadIndex(tableInfo);
+
+        opt.checkNotEmpty(opt.getIndex().getRoot());
+
+        opt.loadQueries(tableInfo);
+        opt.buildPlan(q_l);
+
+
+        for (int i = 0; i < 10; i++) {
+            q_l = tpch14();
+            opt = new JoinOptimizer(cfg);
             opt.loadIndex(tableInfo);
 
             opt.checkNotEmpty(opt.getIndex().getRoot());
 
             opt.loadQueries(tableInfo);
-            opt.buildPlan(q);
+            opt.buildPlan(q_l);
+        }
 
+        for (int i = 0; i < 20; i++) {
+            double p = (20 - i) / 20.0;
+            if (rand.nextDouble() <= p) {
+                q_l = tpch14();
+                System.out.println("INFO: Running query TPC-H q14:" + q_l);
+            } else {
+                q_l = tpch19();
+                System.out.println("INFO: Running query TPC-H q19:" + q_l);
+            }
+            opt = new JoinOptimizer(cfg);
+            opt.loadIndex(tableInfo);
+
+            opt.checkNotEmpty(opt.getIndex().getRoot());
+
+            opt.loadQueries(tableInfo);
+            opt.buildPlan(q_l);
+        }
+
+        for (int i = 0; i < 10; i++) {
+            q_l = tpch19();
+            opt = new JoinOptimizer(cfg);
+            opt.loadIndex(tableInfo);
+
+            opt.checkNotEmpty(opt.getIndex().getRoot());
+
+            opt.loadQueries(tableInfo);
+            opt.buildPlan(q_l);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            double p = (20 - i) / 20.0;
+            if (rand.nextDouble() <= p) {
+                q_l = tpch19();
+                System.out.println("INFO: Running query TPC-H q19:" + q_l);
+            } else {
+                q_l = tpch14();
+                System.out.println("INFO: Running query TPC-H q14:" + q_l);
+            }
+            opt = new JoinOptimizer(cfg);
+            opt.loadIndex(tableInfo);
+
+            opt.checkNotEmpty(opt.getIndex().getRoot());
+
+            opt.loadQueries(tableInfo);
+            opt.buildPlan(q_l);
+        }
+
+
+        for (int i = 0; i < 10; i++) {
+            q_l = tpch14();
+            opt = new JoinOptimizer(cfg);
+            opt.loadIndex(tableInfo);
+
+            opt.checkNotEmpty(opt.getIndex().getRoot());
+
+            opt.loadQueries(tableInfo);
+            opt.buildPlan(q_l);
         }
 
 /*
-        for (int i = 0; i < 2; i++) {
-
-            JoinQuery q = tpch3();
-            System.out.printf("TPCH3 Query %d: %s\n", i, q);
-            // Load table info.
-            if(i==0){
-                q.setForceRepartition(true);
+        for (int i = 0; i < 60; i++) {
+            if (i < 20) {
+                double p = (20 - i) / 20.0;
+                if (rand.nextDouble() <= p) {
+                    q_l = tpch14();
+                    System.out.println("INFO: Running query TPC-H q14:" + q_l);
+                } else {
+                    q_l = tpch19();
+                    System.out.println("INFO: Running query TPC-H q19:" + q_l);
+                }
+            } else if (i < 40) {
+                double p = (40 - i) / 20.0;
+                if (rand.nextDouble() <= p) {
+                    q_l = tpch19();
+                    System.out.println("INFO: Running query TPC-H q19:" + q_l);
+                } else {
+                    q_l = tpch14();
+                    System.out.println("INFO: Running query TPC-H q14:" + q_l);
+                }
+            } else if (i < 60){
+                double p = (60 - i) / 20.0;
+                if (rand.nextDouble() <= p) {
+                    q_l = tpch14();
+                    System.out.println("INFO: Running query TPC-H q14:" + q_l);
+                } else {
+                    q_l = tpch19();
+                    System.out.println("INFO: Running query TPC-H q19:" + q_l);
+                }
             }
 
-            JoinOptimizer opt = new JoinOptimizer(cfg);
+            opt = new JoinOptimizer(cfg);
             opt.loadIndex(tableInfo);
 
             opt.checkNotEmpty(opt.getIndex().getRoot());
 
             opt.loadQueries(tableInfo);
-            opt.buildPlan(q);
-
+            opt.buildPlan(q_l);
         }
-
-
-        for (int i = 0; i < 2; i++) {
-
-            JoinQuery q = tpch5();
-            System.out.printf("TPCH5 Query %d: %s\n", i, q);
-            // Load table info.
-            if(i==0){
-                q.setForceRepartition(true);
-            }
-
-            JoinOptimizer opt = new JoinOptimizer(cfg);
-            opt.loadIndex(tableInfo);
-
-            opt.checkNotEmpty(opt.getIndex().getRoot());
-            opt.loadQueries(tableInfo);
-            opt.buildPlan(q);
-
-        }
-
-        for (int i = 0; i < 2; i++) {
-
-            JoinQuery q = tpch6();
-            System.out.printf("TPCH6 Query %d: %s\n", i, q);
-            // Load table info.
-            if(i==0){
-                q.setForceRepartition(true);
-            }
-
-            JoinOptimizer opt = new JoinOptimizer(cfg);
-            opt.loadIndex(tableInfo);
-
-            opt.checkNotEmpty(opt.getIndex().getRoot());
-            opt.loadQueries(tableInfo);
-            opt.buildPlan(q);
-
-        }
-
-        for (int i = 0; i < 2; i++) {
-
-            JoinQuery q = tpch8();
-            System.out.printf("TPCH8 Query %d: %s\n", i, q);
-            // Load table info.
-            if(i==0){
-                q.setForceRepartition(true);
-            }
-
-            JoinOptimizer opt = new JoinOptimizer(cfg);
-            opt.loadIndex(tableInfo);
-
-            opt.checkNotEmpty(opt.getIndex().getRoot());
-            opt.loadQueries(tableInfo);
-            opt.buildPlan(q);
-
-        }
-*/
+ */
     }
 
-    public static void testCMT(){
+    public static void testCMT() {
         setup();
 
         ConfUtils cfg = new ConfUtils("/Users/ylu/Documents/workspace/mdindex/conf/ylu.properties");
         FileSystem fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
         Globals.loadTableInfo(MH, cfg.getHDFS_WORKING_DIR(), fs);
         TableInfo tableInfo = Globals.getTableInfo(MH);
-
 
 
         JoinRobustTree.randGenerator.setSeed(0);
@@ -453,15 +484,15 @@ public class JoinOptimizerTest {
         String samples = new String(sampleBytes);
         String[] keys = samples.split("\n");
 
-        for (ArrayList<JoinQuery> q: queries) {
+        for (ArrayList<JoinQuery> q : queries) {
 
             JoinQuery q_mh = q.get(0);
 
             System.out.println(q_mh);
 
-            ++ iters;
+            ++iters;
 
-            if(iters == 1){
+            if (iters == 1) {
                 q_mh.setForceRepartition(true);
             }
 
@@ -472,11 +503,11 @@ public class JoinOptimizerTest {
 
             HashSet<Integer> bids = new HashSet<Integer>();
 
-            for(int i = 0 ;i < keys.length; i ++){
+            for (int i = 0; i < keys.length; i++) {
                 key.setBytes(keys[i].getBytes());
                 int bid = (int) opt.getIndex().getBucketId(key);
                 bids.add(bid);
-                if(bid == 3520){
+                if (bid == 3520) {
                     System.out.println(keys[i]);
                 }
             }
@@ -487,7 +518,7 @@ public class JoinOptimizerTest {
             opt.loadQueries(tableInfo);
             opt.buildPlan(q_mh);
 
-            if(iters == 2) break;
+            if (iters == 2) break;
         }
 
     }
