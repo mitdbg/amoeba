@@ -25,7 +25,7 @@ public class RobustTree implements MDIndex {
 	public ParsedTupleList sample;
 
 	public TYPE[] dimensionTypes;
-	RNode root;
+	public RNode root;
 
 	public static class Bound {
 		public double upper;
@@ -88,9 +88,9 @@ public class RobustTree implements MDIndex {
 	}
 
 	public class Task {
-		RNode node;
-		int depth;
-		ParsedTupleList sample;
+		public RNode node;
+		public int depth;
+		public ParsedTupleList sample;
 	}
 
 	/**

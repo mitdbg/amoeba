@@ -3,6 +3,20 @@ from env_setup import *
 
 counter = 0
 
+"""
+Used to measure the time taken to simply upload
+data into HDFS.
+"""
+@parallel
+def hdfs_upload_test():
+    global conf
+    with cd(env.conf['HADOOPBIN']):
+        cmd = './hadoop fs -copyFromLocal' + \
+            ' $INPUTSDIR/*' + \
+            ' $HDFSDIR/testUpload/'
+        cmd = fill_cmd(cmd)
+        run(cmd)
+
 @roles('master')
 def create_table_info():
     global conf
@@ -45,7 +59,51 @@ def create_robust_tree():
             ' --tableName $TABLENAME' + \
             ' --inputsDir $INPUTSDIR' + \
             ' --method 2 ' + \
-            ' --numReplicas 1' + \
+            ' --numBuckets $NUMBUCKETS' + \
+            ' > ~/logs/create_tree.log'
+        cmd = fill_cmd(cmd)
+        run(cmd)
+
+@roles('master')
+def create_kdtree():
+    global conf
+    print env.roledefs
+    with cd(env.conf['HADOOPBIN']):
+        cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder' + \
+            ' --conf $CONF' + \
+            ' --tableName $TABLENAME' + \
+            ' --inputsDir $INPUTSDIR' + \
+            ' --method 8 ' + \
+            ' --numBuckets $NUMBUCKETS' + \
+            ' > ~/logs/create_tree.log'
+        cmd = fill_cmd(cmd)
+        run(cmd)
+
+@roles('master')
+def create_range_tree():
+    global conf
+    print env.roledefs
+    with cd(env.conf['HADOOPBIN']):
+        cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder' + \
+            ' --conf $CONF' + \
+            ' --tableName $TABLENAME' + \
+            ' --inputsDir $INPUTSDIR' + \
+            ' --method 9 ' + \
+            ' --numBuckets $NUMBUCKETS' + \
+            ' > ~/logs/create_tree.log'
+        cmd = fill_cmd(cmd)
+        run(cmd)
+
+@roles('master')
+def create_hybrid_range_tree():
+    global conf
+    print env.roledefs
+    with cd(env.conf['HADOOPBIN']):
+        cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder' + \
+            ' --conf $CONF' + \
+            ' --tableName $TABLENAME' + \
+            ' --inputsDir $INPUTSDIR' + \
+            ' --method 10 ' + \
             ' --numBuckets $NUMBUCKETS' + \
             ' > ~/logs/create_tree.log'
         cmd = fill_cmd(cmd)
@@ -110,6 +168,39 @@ def check_max_memory():
         cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder ' + \
             ' --conf $CONF' + \
             ' --method 5 '
+        cmd = fill_cmd(cmd)
+        run(cmd)
+
+#############
+# Running Queries
+############
+
+@roles('master')
+def upfront_full_scan_tpch_queries():
+    with cd(env.conf['HADOOPBIN']):
+        cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+            ' --adapt false' + \
+            ' --conf $CONF' + \
+            ' --method 3 > ~/logs/full_scan_upfront.log'
+        cmd = fill_cmd(cmd)
+        run(cmd)
+
+@roles('master')
+def upfront_tree_tpch_queries():
+    with cd(env.conf['HADOOPBIN']):
+        cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+            ' --adapt false' + \
+            ' --conf $CONF' + \
+            ' --method 4 > ~/logs/$TABLENAME_tree_upfront.log'
+        cmd = fill_cmd(cmd)
+        run(cmd)
+
+@roles('master')
+def upfront_spark_tpch_queries():
+    with cd(env.conf['HADOOPBIN']):
+        cmd = '$SPARKSUBMIT --class perf.benchmark.upfront.SparkUpfront --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+            ' --conf $CONF' + \
+            ' > ~/logs/spark_upfront.log'
         cmd = fill_cmd(cmd)
         run(cmd)
 

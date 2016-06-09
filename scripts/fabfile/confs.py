@@ -1,10 +1,10 @@
 LOCAL = {
-    'CONF': '/Users/anil/Dev/repos/mdindex/conf/main.properties',
-    'JAR': '/Users/anil/Dev/repos/mdindex/build/libs/mdindex-all.jar',
+    'CONF': '/Users/anil/Dev/repos/amoeba/conf/main.properties',
+    'JAR': '/Users/anil/Dev/repos/amoeba/build/libs/amoeba-all.jar',
     'SPARKSUBMIT': '/Users/anil/Dev/tools/spark-1.6.0-bin-hadoop2.6/bin/spark-submit',
     'HADOOPBIN' : '/Users/anil/Dev/tools/hadoop-2.6.0/bin',
     'HOMEDIR' : '/Users/anil',
-    'HDFSDIR' : '/user/mdindex',
+    'HDFSDIR' : '/user/amoeba',
     'USER': 'anil',
     'HOSTS': ['localhost'],
     'ROLEDEFS': { 'master': ['localhost'] }
@@ -16,9 +16,9 @@ SERVER = {
     'SPARKSUBMIT': '/home/mdindex/spark-1.6.0-bin-hadoop2.6/bin/spark-submit',
     'HADOOPBIN' : '~/hadoop-2.6.0/bin/',
     'HOMEDIR' : '/home/mdindex/',
-    'HDFSDIR' : '/user/mdindex/',
+    'HDFSDIR' : '/user/amoeba',
     'USER' : 'mdindex',
-    'HOSTS' : ['istc1.csail.mit.edu', 'istc4.csail.mit.edu', 'istc6.csail.mit.edu', 'istc7.csail.mit.edu', 'istc8.csail.mit.edu', 'istc9.csail.mit.edu', 'istc10.csail.mit.edu', 'istc11.csail.mit.edu', 'istc12.csail.mit.edu', 'istc13.csail.mit.edu'],
+    'HOSTS' : ['istc1.csail.mit.edu', 'istc3.csail.mit.edu', 'istc6.csail.mit.edu', 'istc7.csail.mit.edu', 'istc8.csail.mit.edu', 'istc9.csail.mit.edu', 'istc10.csail.mit.edu', 'istc11.csail.mit.edu', 'istc12.csail.mit.edu', 'istc13.csail.mit.edu'],
     'ROLEDEFS' : { 'master': ['istc13.csail.mit.edu'] },
     }
 
@@ -59,7 +59,7 @@ confs = {
     "tpch": {
         'TYPE' : SERVER,
         'TABLENAME' : 'tpch',
-        'INPUTSDIR' : '/data/mdindex/tpch/',
+        'INPUTSDIR' : '/data/mdindex/tpchd100/',
         'HADOOPBIN' : '~/hadoop-2.6.0/bin/',
         'SAMPLINGRATE' : '0.002',
         'DELIMITER': '|',

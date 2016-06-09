@@ -80,6 +80,10 @@ public class Schema {
 		return -1;
 	}
 
+	public String getAttributeName(int attrId) {
+		return fields[attrId].name;
+	}
+
 	public TYPE getType(int attrId) {
 		return fields[attrId].type;
 	}

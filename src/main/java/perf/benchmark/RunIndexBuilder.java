@@ -17,6 +17,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import perf.benchmark.baselines.KDTree;
+import perf.benchmark.baselines.Range2Tree;
+import perf.benchmark.baselines.RangeTree;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,6 +35,10 @@ import java.io.OutputStream;
  *
  */
 public class RunIndexBuilder {
+	public enum TreeType {
+		RobustTree, KDTree, RangeTree, HybridRangeTree
+	};
+
 	RawIndexKey key;
 	IndexBuilder builder;
 
@@ -73,6 +80,9 @@ public class RunIndexBuilder {
     // Zookeeper client.
     CuratorFramework client;
 
+	// Tree Type
+	TreeType treeType;
+
 	public void setUp() {
 
 		partitionBufferSize = 2 * 1024 * 1024;
@@ -111,12 +121,15 @@ public class RunIndexBuilder {
 			System.out.println("The input samplingRate = 0.0, we set it to " + samplingRate);
 		}
 
+		long startTime = System.currentTimeMillis();
 		builder.blockSampleInput(
 				samplingRate,
 				key,
 				inputsDir,
 				tableHDFSDir + "/samples/sample." + cfg.getMACHINE_ID(), 
 				fs);
+		long endTime = System.currentTimeMillis();
+		System.out.println("Time Taken: " + (endTime - startTime) + "ms");
 	}
 
 	/**
@@ -147,6 +160,8 @@ public class RunIndexBuilder {
 	public void buildRobustTreeFromSamples() {
 		assert numBuckets != -1;
 
+		long startTime = System.currentTimeMillis();
+
 		// Write out the combined sample file.
 		ParsedTupleList sample = readSampleFiles();
 		writeOutSample(fs, sample);
@@ -159,8 +174,86 @@ public class RunIndexBuilder {
 				index,
 				getHDFSWriter(tableHDFSDir,
 						cfg.getHDFS_REPLICATION_FACTOR()));
+		long endTime = System.currentTimeMillis();
+		System.out.println("Time Taken: " + (endTime - startTime) + "ms");
 	}
 
+	/**
+	 * Creates a single kd tree. As a side effect reads all the sample files
+	 * from the samples dir and writes it out WORKING_DIR/sample
+	 */
+	public void buildKDTreeFromSamples() {
+		assert numBuckets != -1;
+
+		long startTime = System.currentTimeMillis();
+
+		// Write out the combined sample file.
+		ParsedTupleList sample = readSampleFiles();
+		writeOutSample(fs, sample);
+
+		// Construct the index from the sample.
+		KDTree index = new KDTree(tableInfo);
+		builder.buildIndexFromSample(
+				sample,
+				numBuckets,
+				index,
+				getHDFSWriter(tableHDFSDir,
+						cfg.getHDFS_REPLICATION_FACTOR()));
+		long endTime = System.currentTimeMillis();
+		System.out.println("Time Taken: " + (endTime - startTime) + "ms");
+	}
+
+	/**
+	 * Creates a single tree that range partitions data.
+	 * As a side effect reads all the sample files
+	 * from the samples dir and writes it out WORKING_DIR/sample
+	 */
+	public void buildRangeTreeFromSamples() {
+		assert numBuckets != -1;
+
+		long startTime = System.currentTimeMillis();
+
+		// Write out the combined sample file.
+		ParsedTupleList sample = readSampleFiles();
+		writeOutSample(fs, sample);
+
+		// Construct the index from the sample.
+		RangeTree index = new RangeTree(tableInfo);
+		builder.buildIndexFromSample(
+				sample,
+				numBuckets,
+				index,
+				getHDFSWriter(tableHDFSDir,
+						cfg.getHDFS_REPLICATION_FACTOR()));
+		long endTime = System.currentTimeMillis();
+		System.out.println("Time Taken: " + (endTime - startTime) + "ms");
+	}
+
+
+	/**
+	 * Creates a single robust tree. As a side effect reads all the sample files
+	 * from the samples dir and writes it out WORKING_DIR/sample
+	 */
+	public void buildRange2TreeFromSamples() {
+		assert numBuckets != -1;
+
+		long startTime = System.currentTimeMillis();
+
+		// Write out the combined sample file.
+		ParsedTupleList sample = readSampleFiles();
+		writeOutSample(fs, sample);
+
+		// Construct the index from the sample.
+		Range2Tree index = new Range2Tree(tableInfo);
+		builder.buildIndexFromSample(
+				sample,
+				numBuckets,
+				index,
+				getHDFSWriter(tableHDFSDir,
+						cfg.getHDFS_REPLICATION_FACTOR()));
+		long endTime = System.currentTimeMillis();
+		System.out.println("Time Taken: " + (endTime - startTime) + "ms");
+	}
 
 	/**
 	 * Creates a single robust tree(hard code the attributes used in the tree for now).
@@ -185,11 +278,6 @@ public class RunIndexBuilder {
 						cfg.getHDFS_REPLICATION_FACTOR()));
 	}
 
-
-	/**
-	 * Creates num_replicas robust trees. As a side effect reads all the sample
-	 * files from the samples dir and writes it out WORKING_DIR/sample
-	 */
 	public void writeOutSampleFile() {
 		FileSystem fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
 
@@ -199,6 +287,7 @@ public class RunIndexBuilder {
 	}	
 	
 	public void writePartitionsFromIndex() {
+		long startTime = System.currentTimeMillis();
 		FileSystem fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
 		byte[] indexBytes = HDFSUtils.readFile(fs, tableHDFSDir + "/index");
 
@@ -214,6 +303,9 @@ public class RunIndexBuilder {
 				getHDFSWriter(
 					cfg.getHDFS_WORKING_DIR() + "/" + tableName + dataDir,
 					cfg.getHDFS_REPLICATION_FACTOR()));
+
+		long endTime = System.currentTimeMillis();
+		System.out.println("Time Taken: " + (endTime - startTime) + "ms");
 	}
 
 	public void writePartitionsFromJoinIndex() {
@@ -344,6 +436,15 @@ public class RunIndexBuilder {
 			break;
 		case 7:
 			t.writePartitionsFromJoinIndex();
+			break;
+        case 8:
+			t.buildKDTreeFromSamples();
+			break;
+        case 9:
+            t.buildRangeTreeFromSamples();
+			break;
+        case 10:
+            t.buildRange2TreeFromSamples();
 			break;
 		default:
 			System.out.println("Unknown method " + t.method + " chosen");

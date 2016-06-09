@@ -7,7 +7,6 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 
-import core.adapt.Predicate;
 import core.adapt.iterator.IteratorRecord;
 import core.utils.ConfUtils;
 
@@ -35,7 +34,7 @@ public class SparkQuery {
 		queryConf = new SparkQueryConf(ctx.hadoopConfiguration());
 	}
 
-	public JavaPairRDD<LongWritable, IteratorRecord> createRDD(String hdfsPath,
+	private JavaPairRDD<LongWritable, IteratorRecord> createRDD(String hdfsPath,
 															   Query q) {
 		return this.createRDD(hdfsPath, 0, q);
 	}
@@ -47,27 +46,53 @@ public class SparkQuery {
 		queryConf.setQuery(q);
 		queryConf.setHadoopHome(cfg.getHADOOP_HOME());
 		queryConf.setZookeeperHosts(cfg.getZOOKEEPER_HOSTS());
-		queryConf.setMaxSplitSize(8589934592l); // 8gb is the max size for each
-		// split (with 8 threads in
-		// parallel)
-		queryConf.setMinSplitSize(4294967296l); // 4gb
+		queryConf.setMaxSplitSize(8l << 30); // 8GB
+		queryConf.setMinSplitSize(4l << 30); // 4GB
+		// 8gb is the max size for each
+		// split (with 8 threads in parallel)
 		queryConf.setHDFSReplicationFactor(cfg.getHDFS_REPLICATION_FACTOR());
 
-		// TODO: This is tricky. Figure out how to do for multiple tables.
 		return ctx.newAPIHadoopFile(cfg.getHADOOP_NAMENODE() + hdfsPath + "/"  + q.getTable() + "/data",
 				SparkInputFormat.class, LongWritable.class,
 				IteratorRecord.class, ctx.hadoopConfiguration());
 	}
 
+	/**
+	 * Runs the query by scanning the entire data.
+	 * @param hdfsPath
+	 * @param q
+     * @return
+     */
 	public JavaPairRDD<LongWritable, IteratorRecord> createScanRDD(
 			String hdfsPath, Query q) {
 		queryConf.setFullScan(true);
 		return createRDD(hdfsPath, q);
 	}
 
+	/**
+	 * Runs the query by accessing only data relevant based on current
+	 * partitioning tree.
+	 * @param hdfsPath
+	 * @param q
+     * @return
+     */
+    public JavaPairRDD<LongWritable, IteratorRecord> createNoAdaptRDD(
+			String hdfsPath, Query q) {
+		queryConf.setJustAccess(true);
+		return createRDD(hdfsPath, q);
+	}
+
+	/**
+	 * Runs the query by accessing only data relevant based on current
+	 * partitioning tree and might re-partition the data.
+	 * @param hdfsPath
+	 * @param q
+     * @return
+     */
 	public JavaPairRDD<LongWritable, IteratorRecord> createAdaptRDD(
 			String hdfsPath, Query q) {
 		queryConf.setJustAccess(false);
 		return createRDD(hdfsPath, q);
 	}
+
 }

@@ -10,6 +10,7 @@ import core.utils.ConfUtils;
 import core.utils.HDFSUtils;
 import core.utils.TypeUtils.SimpleDate;
 import core.utils.TypeUtils.TYPE;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.hadoop.fs.FileSystem;
 
 import java.util.*;
@@ -29,6 +30,10 @@ public class TPCHWorkload {
 
     SparkQuery sq;
 
+	boolean adapt = true;
+
+	public int[] supportedQueries = new int[] { 3, 5, 6, 8, 10, 12, 14, 19 };
+
 	public void setUp() {
 		cfg = new ConfUtils(BenchmarkSettings.conf);
 		rand = new Random();
@@ -43,8 +48,6 @@ public class TPCHWorkload {
 		Globals.loadTableInfo(tableName, cfg.getHDFS_WORKING_DIR(), fs);
 		tableInfo = Globals.getTableInfo(tableName);
 		assert tableInfo != null;
-
-		sq = new SparkQuery(cfg);
 
 		// Cleanup queries file - to remove past query workload.
 		HDFSUtils.deleteFile(HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME()),
@@ -82,7 +85,7 @@ public class TPCHWorkload {
 			SimpleDate d3 = new SimpleDate(c.get(Calendar.YEAR),
 				c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
 			Predicate p1_3 = createPredicate("c_mktsegment", TYPE.STRING, c_mktsegment, PREDTYPE.LEQ);
-			Predicate p2_3 = createPredicate("o_orderdate", TYPE.DATE, d3, PREDTYPE.LT);
+			Predicate p2_3 = createPredicate("o_orderdate", TYPE.DATE, d3.oneDayLess(), PREDTYPE.LEQ);
 			Predicate p3_3 = createPredicate("l_shipdate", TYPE.DATE, d3, PREDTYPE.GT);
 			if (rand_3 > 0) {
 				String c_mktsegment_prev = mktSegmentVals[rand_3 - 1];
@@ -99,8 +102,8 @@ public class TPCHWorkload {
 			SimpleDate d5_2 = new SimpleDate(year_5 + 1, 1, 1);
 			Predicate p1_5 = createPredicate("c_region", TYPE.STRING, r_name_5, PREDTYPE.LEQ);
 			Predicate p2_5 = createPredicate("s_region", TYPE.STRING, r_name_5, PREDTYPE.LEQ);
-			Predicate p3_5 = createPredicate("o_orderdate", TYPE.DATE, d5_1, PREDTYPE.GEQ);
-			Predicate p4_5 = createPredicate("o_orderdate", TYPE.DATE, d5_2, PREDTYPE.LT);
+			Predicate p3_5 = createPredicate("o_orderdate", TYPE.DATE, d5_1.oneDayLess(), PREDTYPE.GT);
+			Predicate p4_5 = createPredicate("o_orderdate", TYPE.DATE, d5_2.oneDayLess(), PREDTYPE.LEQ);
 			if (rand_5 > 0) {
 				String r_name_prev_5 = regionNameVals[rand_5 - 1];
 				Predicate p5_5 = createPredicate("c_region", TYPE.STRING, r_name_prev_5, PREDTYPE.GT);
@@ -115,8 +118,8 @@ public class TPCHWorkload {
 			SimpleDate d6_2 = new SimpleDate(year_6 + 1, 1, 1);
 			double discount = rand.nextDouble() * 0.07 + 0.02;
 			double quantity = rand.nextInt(2) + 24.0;
-			Predicate p1_6 = createPredicate("l_shipdate", TYPE.DATE, d6_1, PREDTYPE.GEQ);
-			Predicate p2_6 = createPredicate("l_shipdate", TYPE.DATE, d6_2, PREDTYPE.LT);
+			Predicate p1_6 = createPredicate("l_shipdate", TYPE.DATE, d6_1.oneDayLess(), PREDTYPE.GT);
+			Predicate p2_6 = createPredicate("l_shipdate", TYPE.DATE, d6_2.oneDayLess(), PREDTYPE.LEQ);
 			Predicate p3_6 = createPredicate("l_discount", TYPE.DOUBLE, discount - 0.01, PREDTYPE.GT);
 			Predicate p4_6 = createPredicate("l_discount", TYPE.DOUBLE, discount + 0.01, PREDTYPE.LEQ);
 			Predicate p5_6 = createPredicate("l_quantity", TYPE.DOUBLE, quantity, PREDTYPE.LEQ);
@@ -129,7 +132,7 @@ public class TPCHWorkload {
 			SimpleDate d8_2 = new SimpleDate(1996, 12, 31);
 			String p_type_8 = partTypeVals[rand.nextInt(partTypeVals.length)];
 			Predicate p1_8 = createPredicate("c_region", TYPE.STRING, r_name_8, PREDTYPE.LEQ);
-			Predicate p2_8 = createPredicate("o_orderdate", TYPE.DATE, d8_1, PREDTYPE.GEQ);
+			Predicate p2_8 = createPredicate("o_orderdate", TYPE.DATE, d8_1.oneDayLess(), PREDTYPE.GT);
 			Predicate p3_8 = createPredicate("o_orderdate", TYPE.DATE, d8_2, PREDTYPE.LEQ);
 			Predicate p4_8 = createPredicate("p_type", TYPE.STRING, p_type_8, PREDTYPE.EQ);
 			if (rand_8_1 > 0) {
@@ -149,8 +152,8 @@ public class TPCHWorkload {
 			SimpleDate d10_2 = new SimpleDate(year_10 + monthOffset/12, monthOffset%12 + 1, 1);
 			Predicate p1_10 = createPredicate("l_returnflag", TYPE.STRING, l_returnflag_10, PREDTYPE.LEQ);
 			Predicate p4_10 = createPredicate("l_returnflag", TYPE.STRING, l_returnflag_prev_10, PREDTYPE.GT);
-			Predicate p2_10 = createPredicate("o_orderdate", TYPE.DATE, d10_1, PREDTYPE.GEQ);
-			Predicate p3_10 = createPredicate("o_orderdate", TYPE.DATE, d10_2, PREDTYPE.LT);
+			Predicate p2_10 = createPredicate("o_orderdate", TYPE.DATE, d10_1.oneDayLess(), PREDTYPE.GT);
+			Predicate p3_10 = createPredicate("o_orderdate", TYPE.DATE, d10_2.oneDayLess(), PREDTYPE.LEQ);
 			return createQuery(new Predicate[]{p1_10, p2_10, p3_10, p4_10});
 		case 12:
 			// TODO: We don't handle attrA < attrB style predicate.
@@ -161,8 +164,8 @@ public class TPCHWorkload {
 			SimpleDate d12_1 = new SimpleDate(year_12, 1, 1);
 			SimpleDate d12_2 = new SimpleDate(year_12 + 1, 1, 1);
 			Predicate p1_12 = createPredicate("l_shipmode", TYPE.STRING, shipmode_12, PREDTYPE.LEQ);
-			Predicate p2_12 = createPredicate("l_receiptdate", TYPE.DATE, d12_1, PREDTYPE.GEQ);
-			Predicate p3_12 = createPredicate("l_receiptdate", TYPE.DATE, d12_2, PREDTYPE.LT);
+			Predicate p2_12 = createPredicate("l_receiptdate", TYPE.DATE, d12_1.oneDayLess(), PREDTYPE.GT);
+			Predicate p3_12 = createPredicate("l_receiptdate", TYPE.DATE, d12_2.oneDayLess(), PREDTYPE.LEQ);
 			if (rand_12 > 0) {
 				String shipmode_prev_12 = shipModeVals[rand_12 - 1];
 				Predicate p4_12 = createPredicate("l_shipmode", TYPE.STRING, shipmode_prev_12, PREDTYPE.GT);
@@ -176,8 +179,8 @@ public class TPCHWorkload {
 			SimpleDate d14_1 = new SimpleDate(year_14 + monthOffset_14/12, monthOffset_14%12 + 1, 1);
 			monthOffset_14 += 1;
 			SimpleDate d14_2 = new SimpleDate(year_14 + monthOffset_14/12, monthOffset_14%12 + 1, 1);
-			Predicate p1_14 = createPredicate("o_orderdate", TYPE.DATE, d14_1, PREDTYPE.GEQ);
-			Predicate p2_14 = createPredicate("o_orderdate", TYPE.DATE, d14_2, PREDTYPE.LT);
+			Predicate p1_14 = createPredicate("o_orderdate", TYPE.DATE, d14_1.oneDayLess(), PREDTYPE.GT);
+			Predicate p2_14 = createPredicate("o_orderdate", TYPE.DATE, d14_2.oneDayLess(), PREDTYPE.LEQ);
 			return createQuery(new Predicate[]{p1_14, p2_14});
 		case 19:
 			// TODO: Add to paper how to handle OR. We can treat it as separate set of filters.
@@ -191,7 +194,7 @@ public class TPCHWorkload {
 			Predicate p4_19 = createPredicate("l_quantity", TYPE.DOUBLE, quantity_19, PREDTYPE.GT);
 			quantity_19 += 10;
 			Predicate p5_19 = createPredicate("l_quantity", TYPE.DOUBLE, quantity_19, PREDTYPE.LEQ);
-			Predicate p6_19 = createPredicate("p_size", TYPE.INT, 1, PREDTYPE.GEQ);
+			Predicate p6_19 = createPredicate("p_size", TYPE.INT, 0, PREDTYPE.GT);
 			Predicate p7_19 = createPredicate("p_size", TYPE.INT, 5, PREDTYPE.LEQ);
 			Predicate p8_19 = createPredicate("l_shipmode", TYPE.STRING, "AIR", PREDTYPE.LEQ);
 			return createQuery(new Predicate[]{p1_19, p2_19, p3_19, p4_19, p5_19, p6_19, p7_19, p8_19});
@@ -200,12 +203,21 @@ public class TPCHWorkload {
 		}
 	}
 
+	public long runQuery(Query q) {
+		if (sq == null)
+			sq = new SparkQuery(cfg);
+
+		if (adapt)
+			return sq.createAdaptRDD(cfg.getHDFS_WORKING_DIR(), q).count();
+		else
+			return sq.createNoAdaptRDD(cfg.getHDFS_WORKING_DIR(), q).count();
+	}
+
 	public List<Query> generateWorkload(int numQueries) {
 		ArrayList<Query> queries = new ArrayList<Query>();
-		int[] queryNums = new int[] { 3, 5, 6, 8, 10, 12, 14, 19 };
 
 		for (int i = 0; i < numQueries; i++) {
-			int qNo = queryNums[rand.nextInt(queryNums.length)];
+			int qNo = supportedQueries[rand.nextInt(supportedQueries.length)];
 			Query q = getQuery(qNo);
 			queries.add(q);
 		}
@@ -213,23 +225,36 @@ public class TPCHWorkload {
 		return queries;
 	}
 
-	public long runQuery(Query q) {
-		return sq.createAdaptRDD(cfg.getHDFS_WORKING_DIR(), q).count();
+	public void runWorkload(int numQueries) {
+		System.out.println("INFO: Workload " + numQueries + " queries");
+
+		for (int i=0; i < numQueries; i++) {
+			int qNo = supportedQueries[rand.nextInt(supportedQueries.length)];
+			Query q = getQuery(19);
+			System.out.println("INFO: Query:" + q.toString());
+			long start = System.currentTimeMillis();
+			long result = runQuery(q);
+			long end = System.currentTimeMillis();
+			System.out.println("RES: Query: " + qNo + ";Time Taken: " + (end - start) +
+					"; Result: " + result);
+		}
 	}
 
-	public void runWorkload(int numQueries) {
-		long start, end;
-		List<Query> queries = generateWorkload(numQueries);
-		System.out.println("INFO: Workload " + numQueries);
-		for (Query q: queries) {
-			System.out.println("INFO: Query:" + q.toString());
-		}
+	public void runUniqueWorkload(boolean useTree) {
+		if (sq == null)
+			sq = new SparkQuery(cfg);
 
-		for (Query q : queries) {
-			start = System.currentTimeMillis();
-			long result = runQuery(q);
-			end = System.currentTimeMillis();
-			System.out.println("RES: Time Taken: " + (end - start) + 
+		for (int i=0; i<supportedQueries.length; i++) {
+			Query q = getQuery(supportedQueries[i]);
+			long result;
+			long start = System.currentTimeMillis();
+			if (useTree) {
+				result = sq.createNoAdaptRDD(cfg.getHDFS_WORKING_DIR(), q).count();
+			} else {
+				result = sq.createScanRDD(cfg.getHDFS_WORKING_DIR(), q).count();
+			}
+			long end = System.currentTimeMillis();
+			System.out.println("RES: Query: " + supportedQueries[i] + ";Time Taken: " + (end - start) +
 					"; Result: " + result);
 		}
 	}
@@ -245,6 +270,10 @@ public class TPCHWorkload {
 		int counter = 0;
 		while (counter < args.length) {
 			switch (args[counter]) {
+            case "--adapt":
+				adapt = Boolean.parseBoolean(args[counter + 1]);
+				counter += 2;
+				break;
 			case "--method":
 				method = Integer.parseInt(args[counter + 1]);
 				counter += 2;
@@ -284,6 +313,14 @@ public class TPCHWorkload {
 			case 2:
 				System.out.println("Num Queries: " + t.numQueries);
 				t.printWorkload(t.numQueries);
+				break;
+			// Run each query 1 at a time, full scan
+			case 3:
+				t.runUniqueWorkload(false);
+				break;
+			// Run each query 1 at a time, using the tree
+			case 4:
+				t.runUniqueWorkload(true);
 				break;
             default:
                 break;

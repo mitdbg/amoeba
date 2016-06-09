@@ -28,7 +28,7 @@ public class SingleAttributeQueries {
 	}
 
 	public JavaPairRDD<LongWritable, IteratorRecord> createRDD(String hdfsDir, Predicate... ps) {
-		return sq.createRDD(hdfsDir, new Query("lineitem", ps));
+		return sq.createNoAdaptRDD(hdfsDir, new Query("lineitem", ps));
 	}
 
 	public JavaPairRDD<LongWritable, IteratorRecord> createScanRDD(String hdfsDir, Predicate... ps) {

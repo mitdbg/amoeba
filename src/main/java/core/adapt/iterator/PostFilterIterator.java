@@ -33,7 +33,12 @@ public class PostFilterIterator extends PartitionIterator implements
 
 	@Override
 	protected boolean isRelevant(IteratorRecord record) {
-		return query.qualifies(record);
+		// return query.qualifies(record);
+		if (query.qualifies(record)) {
+			System.out.println("Extended Price " + record.getDoubleAttribute(2));
+			return true;
+		}
+		return false;
 	}
 
 	@Override

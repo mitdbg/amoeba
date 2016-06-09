@@ -31,24 +31,6 @@ public class HDFSPartition extends Partition {
 
 	private CuratorFramework client;
 
-	public HDFSPartition(String pathAndPartitionId, String propertiesFile,
-			short replication) {
-		super(pathAndPartitionId);
-		ConfUtils conf = new ConfUtils(propertiesFile);
-		String coreSitePath = conf.getHADOOP_HOME()
-				+ "/etc/hadoop/core-site.xml";
-		Configuration e = new Configuration();
-		e.addResource(new Path(coreSitePath));
-		try {
-			this.hdfs = FileSystem.get(e);
-			this.replication = replication;
-		} catch (IOException ex) {
-			throw new RuntimeException("failed to get hdfs filesystem");
-		}
-		client = CuratorUtils.createAndStartClient(
-				conf.getZOOKEEPER_HOSTS());
-	}
-
 	public HDFSPartition(FileSystem hdfs, String pathAndPartitionId,
 			short replication, CuratorFramework client) {
 		super(pathAndPartitionId);

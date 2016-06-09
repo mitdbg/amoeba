@@ -25,3 +25,4 @@ export MASTER=spark://128.30.77.86:7077
 export SPARK_MASTER_IP=128.30.77.86
 export SPARK_JAVA_OPTS+=" -Dspark.local.dir=/data/mdindex/tmp -Dhadoop.tmp.dir=/data/mdindex/dfs"
 export SPARK_LOCAL_DIRS='/data/mdindex/tmp'
+export SPARK_WORKER_DIR='/data/mdindex/work'

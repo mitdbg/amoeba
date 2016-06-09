@@ -1,5 +1,6 @@
 from fabric.api import *
 from fabric.contrib.files import exists
+import fabric
 
 counter = 0
 
@@ -64,3 +65,13 @@ def update_config():
     put('server/server.properties', '/home/mdindex/amoeba.properties')
     run('echo "MACHINE_ID = %d" >> /home/mdindex/amoeba.properties' % counter)
     counter += 1
+
+@parallel
+def clean_cluster():
+  run('rm -R /data/mdindex/logs/hadoop/')
+  run('rm -R /home/mdindex/spark-1.6.0-bin-hadoop2.6/logs/')
+  run('rm -R /home/mdindex/spark-1.6.0-bin-hadoop2.6/work/')
+
+@parallel
+def parallel_shell():
+  run('mv /data/mdindex/tpchd100/download_data.sh ~/')

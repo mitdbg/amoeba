@@ -72,6 +72,28 @@ def move_data_tpch():
 # ./spark-shell --master spark://128.30.77.86:7077 --packages com.databricks:spark-csv_2.11:1.2.0 --driver-memory 4G --executor-memory 100G -i <path to>/tpch.scala
 
 @serial
+def create_script_download_data():
+    if exists('/data/mdindex/tpchd100'):
+        run('rm -rf /data/mdindex/tpchd100')
+
+    run('mkdir /data/mdindex/tpchd100')
+
+    global counter
+    with cd('/data/mdindex/tpchd100'):
+        script = "#!/bin/bash\n"
+        script += "/home/mdindex/hadoop-2.6.0/bin/hadoop fs -get " + \
+            "/user/mdindex/tpch100/part-*%d /data/mdindex/tpchd100\n" % counter
+        run('echo "%s" > download_data.sh' % script)
+        run('chmod +x download_data.sh')
+
+    counter += 1
+
+@parallel
+def download_data():
+    run('nohup /data/mdindex/tpchd100/download_data.sh >> /tmp/xxx 2>&1 < /dev/null &', pty=False)
+
+
+@serial
 def script_move_data_cmt():
     # Create directory on HDFS first.
     with cd('/data/mdindex/yilu/cmt100000000'):
@@ -135,7 +157,7 @@ def clear_tmp():
     run('nohup /data/mdindex/yilu/clear_tmp.sh >> /tmp/xxx 2>&1 < /dev/null &', pty=False)
 
 @serial
-def create_script_download_data():
+def create_script_download_data_join():
     if exists('/data/mdindex/yilu/tpch100'):
         run('rm -rf /data/mdindex/yilu/tpch100')
 
@@ -172,7 +194,7 @@ def create_script_download_data():
     counter += 1
 
 @parallel
-def download_data():
+def download_data_join():
     run('nohup /data/mdindex/yilu/download_data.sh >> /tmp/xxx 2>&1 < /dev/null &', pty=False)
 
 

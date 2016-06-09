@@ -10,7 +10,42 @@ import java.util.List;
 
 public class Predicate {
 	public enum PREDTYPE {
-		LEQ, GEQ, GT, LT, EQ
+		LEQ, GEQ, GT, LT, EQ;
+
+		@Override
+		public String toString() {
+			switch(this) {
+				case LEQ:
+					return "<=";
+				case GEQ:
+					return ">=";
+				case GT:
+					return ">";
+				case LT:
+					return "<";
+				case EQ:
+					return "=";
+				default:
+					return "=";
+			}
+		}
+
+		public static PREDTYPE getPredType(String predString) {
+			switch (predString) {
+				case "<=":
+					return LEQ;
+                case ">=":
+					return GEQ;
+				case ">":
+					return GT;
+				case "<":
+					return LT;
+				case "=":
+					return EQ;
+				default:
+					throw new IllegalArgumentException("predicate string " + predString + " not a valid pred");
+			}
+		}
 	};
 
 	public int attribute;
@@ -37,7 +72,7 @@ public class Predicate {
 		this.attribute = Integer.parseInt(tokens[0]);
 		this.type = TYPE.valueOf(tokens[1]);
 		this.value = TypeUtils.deserializeValue(this.type, tokens[2]);
-		this.predtype = PREDTYPE.valueOf(tokens[3]);
+		this.predtype = PREDTYPE.getPredType(tokens[3]);
 	}
 
 	public void normalizePredicate() {

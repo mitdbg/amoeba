@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import core.common.globals.TableInfo;
+import core.utils.TypeUtils;
 import org.apache.hadoop.io.Text;
 
 import com.google.common.base.Joiner;
@@ -114,6 +115,8 @@ public class Query implements Serializable {
 			default:
 				throw new RuntimeException("Invalid data type!");
 			}
+
+			if (!qualify) return false;
 		}
 		return qualify;
 	}
@@ -125,5 +128,29 @@ public class Query implements Serializable {
 			stringPredicates = Joiner.on(";").join(predicates);
 
 		return table + "|" + stringPredicates;
+	}
+
+	/**
+	 * Generate a Spark query string.
+	 * Uses count(*) for now as selection.
+	 * @return
+     */
+	public String createQueryString() {
+		String query = "SELECT * FROM " + table + " WHERE ";
+		TableInfo tf = Globals.getTableInfo(table);
+
+		for (int i=0; i<predicates.length; i++) {
+			Predicate p = predicates[i];
+			if (p.type == TypeUtils.TYPE.DATE || p.type == TypeUtils.TYPE.STRING)
+				query += tf.schema.getAttributeName(p.attribute) + " " + p.predtype.toString() + " \"" + p.value.toString() + "\"";
+			else
+				query += tf.schema.getAttributeName(p.attribute) + " " + p.predtype.toString() + " " + p.value.toString();
+
+			if (i < predicates.length - 1)
+				query += " AND ";
+		}
+
+		System.out.println(query);
+		return query;
 	}
 }

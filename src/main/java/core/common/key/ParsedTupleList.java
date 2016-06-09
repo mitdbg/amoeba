@@ -421,8 +421,8 @@ public class ParsedTupleList {
 	public byte[] marshall(char delimiter) {
 		List<byte[]> byteArrays = Lists.newArrayList();
 
-		int initialSize = sampleSize * 100; // assumption: each record could be
-											// of max size 100 bytes
+		int initialSize = sampleSize * 400; // assumption: each record could be
+											// of max size 400 bytes
 		byte[] recordBytes = new byte[initialSize];
 
 		int offset = 0;

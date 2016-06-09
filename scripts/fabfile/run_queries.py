@@ -13,6 +13,7 @@ def shell():
 def run_tpch_queries():
     with cd(env.conf['HADOOPBIN']):
         cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+            ' --adapt false' + \
             ' --conf $CONF' + \
             ' --numQueries 1' + \
             ' --method 1 > ~/logs/tpch_workload.log'
