@@ -1,15 +1,12 @@
 package core.adapt;
 
 
+import com.google.common.base.Joiner;
+import org.apache.hadoop.io.Text;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
-
-import core.adapt.Predicate;
-import core.adapt.Query;
-import org.apache.hadoop.io.Text;
-
-import com.google.common.base.Joiner;
 
 /**
  * Created by ylu on 1/25/16.
@@ -55,11 +52,11 @@ public class JoinQuery implements Serializable {
         return this.table;
     }
 
-    public int getJoinAttribute(){
+    public int getJoinAttribute() {
         return this.joinAttribute;
     }
 
-    public Query castToQuery(){
+    public Query castToQuery() {
         return new Query(table, predicates);
     }
 
@@ -67,12 +64,12 @@ public class JoinQuery implements Serializable {
         Text.writeString(out, toString());
     }
 
-    public void setForceRepartition(boolean flag){
-        this.forceRepartition = flag;
+    public boolean getForceRepartition() {
+        return this.forceRepartition;
     }
 
-    public boolean getForceRepartition(){
-        return this.forceRepartition;
+    public void setForceRepartition(boolean flag) {
+        this.forceRepartition = flag;
     }
 
     @Override
@@ -80,6 +77,6 @@ public class JoinQuery implements Serializable {
         String stringPredicates = "";
         if (predicates.length != 0)
             stringPredicates = Joiner.on(";").join(predicates);
-        return table + "|" + joinAttribute + "|" + forceRepartition + "|" +  stringPredicates;
+        return table + "|" + joinAttribute + "|" + forceRepartition + "|" + stringPredicates;
     }
 }

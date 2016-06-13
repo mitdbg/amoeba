@@ -19,15 +19,15 @@ public class Range2Tree extends RobustTree {
     }
 
     public int getAttrForLevel(int level) {
-       if (level < 6) {
-           return tableInfo.schema.getAttributeId("o_orderdate");
-       } else if (level < 8) {
-           return tableInfo.schema.getAttributeId("c_region");
-       } else if (level < 10) {
-           return tableInfo.schema.getAttributeId("c_mktsegment");
-       } else {
-           return tableInfo.schema.getAttributeId("l_quantity");
-       }
+        if (level < 6) {
+            return tableInfo.schema.getAttributeId("o_orderdate");
+        } else if (level < 8) {
+            return tableInfo.schema.getAttributeId("c_region");
+        } else if (level < 10) {
+            return tableInfo.schema.getAttributeId("c_mktsegment");
+        } else {
+            return tableInfo.schema.getAttributeId("l_quantity");
+        }
     }
 
     @Override

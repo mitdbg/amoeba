@@ -4,15 +4,11 @@ import core.adapt.Query;
 import core.utils.ConfUtils;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.spark.SparkConf;
-import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.hive.HiveContext;
 import perf.benchmark.BenchmarkSettings;
 import perf.benchmark.TPCHWorkload;
-
-import java.util.Random;
 
 /**
  * Created by anil on 5/12/16.
@@ -31,8 +27,8 @@ public class SparkUpfront {
             + "s_phone string, s_acctbal double, s_nation string, s_region string,"
             + "c_name string, c_address string,"
             + "c_phone string, c_acctbal double, c_mktsegment string , c_nation string, c_region string) "
-    + "USING com.databricks.spark.csv "
-    + "OPTIONS (path \"/user/amoeba/uploadtest/\", header \"false\", delimiter \"|\")";
+            + "USING com.databricks.spark.csv "
+            + "OPTIONS (path \"/user/amoeba/uploadtest/\", header \"false\", delimiter \"|\")";
 
     private ConfUtils cfg;
 
@@ -42,6 +38,14 @@ public class SparkUpfront {
 
     public SparkUpfront() {
 
+    }
+
+    public static void main(String[] args) {
+        BenchmarkSettings.loadSettings(args);
+        BenchmarkSettings.printSettings();
+        SparkUpfront s = new SparkUpfront();
+        s.setUp();
+        s.runQueries();
     }
 
     public void setUp() {
@@ -65,20 +69,13 @@ public class SparkUpfront {
             e.printStackTrace();
         }
 
-//        sc = SparkContext.getOrCreate(sconf);
-//        sc.hadoopConfiguration().setBoolean(
-//                FileInputFormat.INPUT_DIR_RECURSIVE, true);
-//        sc.hadoopConfiguration().set("fs.hdfs.impl",
-//                org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
         ctx = new JavaSparkContext(sconf);
         ctx.hadoopConfiguration().setBoolean(
                 FileInputFormat.INPUT_DIR_RECURSIVE, true);
         ctx.hadoopConfiguration().set("fs.hdfs.impl",
                 org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
 
-//        sqlContext = new HiveContext(sc);
         sqlContext = new SQLContext(ctx);
-        // sqlContext.sql(dropTpch);
         sqlContext.sql(createTpch);
     }
 
@@ -86,7 +83,7 @@ public class SparkUpfront {
         TPCHWorkload w = new TPCHWorkload();
         w.setUp();
 
-        for (int i=0; i<w.supportedQueries.length; i++) {
+        for (int i = 0; i < w.supportedQueries.length; i++) {
             Query q = w.getQuery(w.supportedQueries[i]);
             long start = System.currentTimeMillis();
             String query = q.createQueryString();
@@ -97,13 +94,5 @@ public class SparkUpfront {
             System.out.println("RES: Query: " + w.supportedQueries[i] + ";Time Taken: " + (end - start) +
                     "; Result: " + result);
         }
-    }
-
-    public static void main(String[] args) {
-        BenchmarkSettings.loadSettings(args);
-        BenchmarkSettings.printSettings();
-        SparkUpfront s = new SparkUpfront();
-        s.setUp();
-        s.runQueries();
     }
 }

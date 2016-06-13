@@ -5,21 +5,18 @@ package core.adapt.spark.join;
  */
 
 
-import java.util.*;
-
-
-import org.apache.commons.io.FilenameUtils;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.Path;
-
-
 import com.google.common.primitives.Ints;
-
-
 import core.adapt.AccessMethod.PartitionSplit;
 import core.adapt.JoinQuery;
 import core.adapt.iterator.PostFilterIterator;
 import core.adapt.iterator.RepartitionIterator;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class HPJoinInput {
 
@@ -29,7 +26,7 @@ public class HPJoinInput {
     protected boolean MDIndexInput;
 
 
-    public HPJoinInput(boolean MDIndexInput){
+    public HPJoinInput(boolean MDIndexInput) {
         this.MDIndexInput = MDIndexInput;
     }
 
@@ -46,7 +43,7 @@ public class HPJoinInput {
             try {
                 String fileName = FilenameUtils.getName(file.getPath().toString());
                 int id = 0;
-                if(MDIndexInput) {
+                if (MDIndexInput) {
                     id = Integer.parseInt(fileName);
                 } else {
                     id = Integer.parseInt(fileName.substring(fileName.indexOf('-') + 1));
@@ -87,7 +84,6 @@ public class HPJoinInput {
     }
 
 
-
     public long[] getLengths(int[] partitionIds) {
         long[] lengthsArr = new long[partitionIds.length];
         for (int i = 0; i < lengthsArr.length; i++) {
@@ -95,6 +91,7 @@ public class HPJoinInput {
         }
         return lengthsArr;
     }
+
     public Map<Integer, Long> getPartitionIdSizeMap() {
         return partitionIdSizeMap;
     }

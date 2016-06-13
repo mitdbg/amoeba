@@ -1,7 +1,6 @@
 package core.adapt.spark.join;
 
 import core.adapt.JoinQuery;
-
 import org.apache.hadoop.conf.Configuration;
 
 
@@ -28,29 +27,29 @@ public class SparkJoinQueryConf {
         this.conf = conf;
     }
 
-    public void setWorkingDir(String dataset) {
-        conf.set(WORKING_DIR, dataset);
-    }
-
     public String getWorkingDir() {
         return conf.get(WORKING_DIR);
     }
 
-    public void setFullScan(boolean flag) {
-        conf.setBoolean(FULL_SCAN, flag);
+    public void setWorkingDir(String dataset) {
+        conf.set(WORKING_DIR, dataset);
     }
 
     public boolean getFullScan() {
         return conf.getBoolean(FULL_SCAN, false); // don't full scan by default
     }
 
-    public void setJustAccess(boolean flag) {
-        conf.setBoolean(JUST_ACCESS, flag);
+    public void setFullScan(boolean flag) {
+        conf.setBoolean(FULL_SCAN, flag);
     }
 
     public boolean getJustAccess() {
         return conf.getBoolean(JUST_ACCESS, true); // don't adapt by default,
         // i.e. just access
+    }
+
+    public void setJustAccess(boolean flag) {
+        conf.setBoolean(JUST_ACCESS, flag);
     }
 
     public void setJoinQuery(JoinQuery query) {
@@ -65,62 +64,60 @@ public class SparkJoinQueryConf {
         return new JoinQuery(conf.get(QUERY));
     }
 
-    public void setMaxSplitSize(long maxSplitSize) {
-        conf.set(MAX_SPLIT_SIZE, "" + maxSplitSize);
-    }
-
     public long getMaxSplitSize() {
         return Long.parseLong(conf.get(MAX_SPLIT_SIZE));
     }
 
-
-
-    public void setMinSplitSize(long minSplitSize) {
-        conf.set(MIN_SPLIT_SIZE, "" + minSplitSize);
+    public void setMaxSplitSize(long maxSplitSize) {
+        conf.set(MAX_SPLIT_SIZE, "" + maxSplitSize);
     }
 
-    public void setWorkerNum(int num){
-        conf.set(WORKER_NUM, "" + num);
-    }
-
-    public int getWorkerNum(){
+    public int getWorkerNum() {
         return Integer.parseInt(conf.get(WORKER_NUM));
+    }
+
+    public void setWorkerNum(int num) {
+        conf.set(WORKER_NUM, "" + num);
     }
 
     public long getMinSplitSize() {
         return Long.parseLong(conf.get(MIN_SPLIT_SIZE));
     }
 
-    public void setZookeeperHosts(String hosts) {
-        conf.set(ZOOKEEPER_HOSTS, "" + hosts);
+    public void setMinSplitSize(long minSplitSize) {
+        conf.set(MIN_SPLIT_SIZE, "" + minSplitSize);
     }
 
     public String getZookeeperHosts() {
         return conf.get(ZOOKEEPER_HOSTS);
     }
 
-    public void setHadoopHome(String home) {
-        conf.set(HADOOP_HOME, home);
+    public void setZookeeperHosts(String hosts) {
+        conf.set(ZOOKEEPER_HOSTS, "" + hosts);
     }
 
     public String getHadoopHome() {
         return conf.get(HADOOP_HOME);
     }
 
-    public void setHDFSReplicationFactor(short f) {
-        conf.set(HDFS_REPLICATION_FACTOR, Short.toString(f));
+    public void setHadoopHome(String home) {
+        conf.set(HADOOP_HOME, home);
     }
 
     public short getHDFSReplicationFactor() {
         return Short.parseShort(conf.get(HDFS_REPLICATION_FACTOR));
     }
 
-    public void setReplicaId(int numReplicas) {
-        conf.set(REPLICA_ID, String.valueOf(numReplicas));
+    public void setHDFSReplicationFactor(short f) {
+        conf.set(HDFS_REPLICATION_FACTOR, Short.toString(f));
     }
 
     public int getReplicaId() {
         return Integer.parseInt(conf.get(REPLICA_ID));
+    }
+
+    public void setReplicaId(int numReplicas) {
+        conf.set(REPLICA_ID, String.valueOf(numReplicas));
     }
 
     public Configuration getConf() {

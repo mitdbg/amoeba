@@ -2,7 +2,6 @@ package perf.benchmark;
 
 import core.adapt.JoinQuery;
 import core.adapt.Predicate;
-import core.adapt.spark.RangePartitioner;
 import core.adapt.spark.join.SparkJoinQuery;
 import core.common.globals.Schema;
 import core.common.globals.TableInfo;
@@ -16,9 +15,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import scala.Tuple2;
 
 import java.io.FileNotFoundException;
@@ -33,7 +30,7 @@ public class CMTJoinWorkload {
 
     private Schema schemaMH, schemaMHL, schemaSF;
     private String stringMH, stringMHL, stringSF;
-    private int    sizeMH, sizeMHL, sizeSF;
+    private int sizeMH, sizeMHL, sizeSF;
     private String MH = "mh", MHL = "mhl", SF = "sf";
     private TableInfo tableMH, tableMHL, tableSF;
     private ArrayList<Long> sf_id_keys;
@@ -46,6 +43,24 @@ public class CMTJoinWorkload {
     private int numQueries;
 
     private Random rand;
+
+    public static void main(String[] args) {
+
+        BenchmarkSettings.loadSettings(args);
+        BenchmarkSettings.printSettings();
+
+        CMTJoinWorkload t = new CMTJoinWorkload();
+        t.loadSettings(args);
+        t.setUp();
+
+        switch (t.method) {
+            case 1:
+                t.runWorkload();
+                break;
+            default:
+                break;
+        }
+    }
 
     public void setUp() {
         cfg = new ConfUtils(BenchmarkSettings.conf);
@@ -60,17 +75,16 @@ public class CMTJoinWorkload {
 
         String workingDir = cfg.getHDFS_WORKING_DIR();
 
-        sf_id_keys = RangePartitionerUtils.getKeys(cfg, tableSF, workingDir + "/"  + SF + "/sample", schemaSF.getAttributeId("sf_id"));
+        sf_id_keys = RangePartitionerUtils.getKeys(cfg, tableSF, workingDir + "/" + SF + "/sample", schemaSF.getAttributeId("sf_id"));
     }
 
-    public void garbageCollect(){
+    public void garbageCollect() {
         FileSystem fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
 
         tableMH.gc(cfg.getHDFS_WORKING_DIR(), fs);
         tableMHL.gc(cfg.getHDFS_WORKING_DIR(), fs);
         tableSF.gc(cfg.getHDFS_WORKING_DIR(), fs);
     }
-
 
     public void loadSettings(String[] args) {
         int counter = 0;
@@ -119,7 +133,7 @@ public class CMTJoinWorkload {
         }
     }
 
-    public void cleanup(String path){
+    public void cleanup(String path) {
         FileSystem fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
         try {
             fs.delete(new Path(path), true);
@@ -127,7 +141,6 @@ public class CMTJoinWorkload {
             e.printStackTrace();
         }
     }
-
 
     public void postProcessing(String path, String tableName, Schema schema) {
 
@@ -165,7 +178,6 @@ public class CMTJoinWorkload {
         }
     }
 
-
     public Predicate getPredicate(Schema schema, String pred) {
         String[] parts = pred.split(" ");
         int attrId = schema.getAttributeId(parts[0].trim());
@@ -202,8 +214,6 @@ public class CMTJoinWorkload {
         return p;
     }
 
-
-
     public ArrayList<ArrayList<JoinQuery>> generateWorkload() {
         byte[] stringBytes = HDFSUtils.readFile(
                 HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME()),
@@ -212,7 +222,7 @@ public class CMTJoinWorkload {
         String queriesString = new String(stringBytes);
         String[] queries = queriesString.split("\n");
         ArrayList<ArrayList<JoinQuery>> ret = new ArrayList<ArrayList<JoinQuery>>();
-        for (int i=0; i<queries.length; i++) {
+        for (int i = 0; i < queries.length; i++) {
             String query = queries[i];
             String[] predicates = query.split(";");
             ArrayList<Predicate> mhPreds = new ArrayList<Predicate>();
@@ -220,8 +230,8 @@ public class CMTJoinWorkload {
 
             ArrayList<JoinQuery> q = new ArrayList<JoinQuery>();
 
-            for (int j=0; j<predicates.length; j++) {
-                if(predicates[j].startsWith(MH)){
+            for (int j = 0; j < predicates.length; j++) {
+                if (predicates[j].startsWith(MH)) {
                     Predicate p = getPredicate(schemaMH, predicates[j]);
                     mhPreds.add(p);
                 } else {
@@ -233,7 +243,7 @@ public class CMTJoinWorkload {
             Predicate[] mhArray = mhPreds.toArray(new Predicate[mhPreds.size()]);
             Predicate[] sfArray = sfPreds.toArray(new Predicate[sfPreds.size()]);
 
-            JoinQuery q_mh = new JoinQuery(MH, schemaMH.getAttributeId("mh_id"),  mhArray);
+            JoinQuery q_mh = new JoinQuery(MH, schemaMH.getAttributeId("mh_id"), mhArray);
             JoinQuery q_sf = new JoinQuery(SF, schemaSF.getAttributeId("sf_id"), sfArray);
 
             q.add(q_mh);
@@ -245,22 +255,21 @@ public class CMTJoinWorkload {
         return ret;
     }
 
-
     // sf ⋈ (mhl ⋈ mh)
-    public void runWorkload(){
+    public void runWorkload() {
 
 
         ArrayList<ArrayList<JoinQuery>> queries = generateWorkload();
         SparkJoinQuery sq = new SparkJoinQuery(cfg);
         int iters = 0;
 
-        for (ArrayList<JoinQuery> q: queries) {
+        for (ArrayList<JoinQuery> q : queries) {
 
             JoinQuery q_mh = q.get(0);
             JoinQuery q_sf = q.get(1);
             JoinQuery q_mhl = new JoinQuery(MHL, schemaMHL.getAttributeId("mhl_mapmatch_history_id"), EmptyPredicates);
 
-            if(++iters == 5){
+            if (++iters == 5) {
                 q_mh.setForceRepartition(true);
                 q_sf.setForceRepartition(true);
                 q_mhl.setForceRepartition(true);
@@ -275,7 +284,7 @@ public class CMTJoinWorkload {
             String stringMH_join_MHL = stringMH + ", " + stringMHL;
             Schema schemaMH_join_MHL = Schema.createSchema(stringMH_join_MHL);
 
-            JavaPairRDD<LongWritable, Text> mh_join_mhl_rdd = sq.createJoinRDD(MH, q_mh, "NULL",MHL, q_mhl, "NULL",  schemaMH_join_MHL.getAttributeId("mhl_dataset_id"));
+            JavaPairRDD<LongWritable, Text> mh_join_mhl_rdd = sq.createJoinRDD(MH, q_mh, "NULL", MHL, q_mhl, "NULL", schemaMH_join_MHL.getAttributeId("mhl_dataset_id"));
             JavaPairRDD<LongWritable, Text> sf_rdd = sq.createScanRDD(SF, q_sf);
             JavaPairRDD<LongWritable, Tuple2<Text, Text>> rdd = mh_join_mhl_rdd.join(sf_rdd);
             long result = rdd.count();
@@ -283,24 +292,6 @@ public class CMTJoinWorkload {
             System.out.println("RES: Time Taken: " + (System.currentTimeMillis() - start) + "; Result: " + result);
 
             garbageCollect();
-        }
-    }
-
-    public static void main(String[] args) {
-
-        BenchmarkSettings.loadSettings(args);
-        BenchmarkSettings.printSettings();
-
-        CMTJoinWorkload t = new CMTJoinWorkload();
-        t.loadSettings(args);
-        t.setUp();
-
-        switch (t.method) {
-            case 1:
-                t.runWorkload();
-                break;
-            default:
-                break;
         }
     }
 }

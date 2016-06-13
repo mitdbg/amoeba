@@ -3,10 +3,8 @@ package core.adapt.spark.join;
 
 import core.adapt.AccessMethod.PartitionSplit;
 import core.adapt.JoinQuery;
-import core.adapt.iterator.PartitionIterator;
-import core.adapt.iterator.PostFilterIterator;
+import core.utils.ConfUtils;
 import core.utils.HDFSUtils;
-import core.utils.RangePartitionerUtils;
 import core.utils.SparkUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -16,13 +14,10 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import core.utils.ConfUtils;
 import org.apache.spark.api.java.function.PairFunction;
-
 import scala.Tuple2;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by ylu on 1/6/16.
@@ -31,36 +26,11 @@ import java.util.List;
 
 public class SparkJoinQuery {
 
-    public static class Mapper implements PairFunction<Tuple2<LongWritable, Tuple2<Text, Text>>, LongWritable, Text> {
-        String Delimiter;
-        String Splitter;
-        int partitionKey;
-        public Mapper(String Delimiter, int partitionKey) {
-            this.Delimiter = Delimiter;
-            this.partitionKey = partitionKey;
-            if (Delimiter.equals("|"))
-                Splitter = "\\|";
-            else
-                Splitter = Delimiter;
-        }
-
-        @Override
-        public Tuple2<LongWritable, Text> call(Tuple2<LongWritable, Tuple2<Text, Text>> x) throws Exception {
-            String s1 = x._2()._1().toString();
-            String s2 = x._2()._2().toString();
-            String value = s1 + Delimiter + s2;
-            long key = Long.parseLong(value.split(Splitter)[partitionKey]);
-            return new Tuple2<LongWritable, Text>(new LongWritable(key), new Text(value));
-        }
-    }
-
     protected SparkJoinQueryConf queryConf;
     protected JavaSparkContext ctx;
     protected ConfUtils cfg;
-
     private String Delimiter = "|";
     private String joinStrategy = "Heuristic";
-
     public SparkJoinQuery(ConfUtils config) {
         this.cfg = config;
         SparkConf sconf = SparkUtils.getSparkConf(this.getClass().getName(), config);
@@ -88,19 +58,17 @@ public class SparkJoinQuery {
         queryConf.setWorkerNum(9);
     }
 
-    public void setBufferSize(long size){
+    public void setBufferSize(long size) {
         queryConf.setMaxSplitSize(size);
-    }
-
-    public void setDelimiter(String delimiter) {
-        Delimiter = delimiter;
     }
 
     public String getDelimiter() {
         return Delimiter;
     }
 
-	/* SparkJoinQuery */
+    public void setDelimiter(String delimiter) {
+        Delimiter = delimiter;
+    }
 
     public JavaPairRDD<LongWritable, Text> createJoinRDD(String hdfsPath) {
         queryConf.setReplicaId(0);
@@ -110,6 +78,7 @@ public class SparkJoinQuery {
                 Text.class, ctx.hadoopConfiguration());
     }
 
+	/* SparkJoinQuery */
 
     public JavaPairRDD<LongWritable, Text> createJoinRDD(
             String dataset1, JoinQuery dataset1_query, String dataset1_cutpoints,
@@ -134,7 +103,7 @@ public class SparkJoinQuery {
         conf.set("DATASET1_QUERY", dataset1_query.toString());
         conf.set("DATASET2_QUERY", dataset2_query.toString());
 
-        conf.set("PARTITION_KEY", Integer.toString(partitionKey)) ;
+        conf.set("PARTITION_KEY", Integer.toString(partitionKey));
 
         conf.set("JOINALGO", joinStrategy);
 
@@ -144,11 +113,11 @@ public class SparkJoinQuery {
 
         JavaPairRDD<LongWritable, Text> rdd = null;
 
-        if (planner.hyperjoin){
+        if (planner.hyperjoin) {
             // hyper join
             String hyperJoinInput = planner.getHyperJoinInput();
             System.out.println("hyperJoinInput: " + hyperJoinInput);
-            conf.set("DATASETINFO",hyperJoinInput);
+            conf.set("DATASETINFO", hyperJoinInput);
             rdd = createJoinRDD(hdfsPath);
 
         } else {
@@ -176,11 +145,11 @@ public class SparkJoinQuery {
 
             int numPartitions = 200;
 
-            if(dataset1_query.getForceRepartition() || dataset2_query.getForceRepartition()){
+            if (dataset1_query.getForceRepartition() || dataset2_query.getForceRepartition()) {
                 numPartitions = 2000;
             }
 
-            JavaPairRDD<LongWritable, Tuple2<Text,Text> > join_rdd = dataset1RDD.join(dataset2RDD, numPartitions);
+            JavaPairRDD<LongWritable, Tuple2<Text, Text>> join_rdd = dataset1RDD.join(dataset2RDD, numPartitions);
 
             rdd = join_rdd.mapToPair(new Mapper(Delimiter, partitionKey));
 
@@ -188,8 +157,6 @@ public class SparkJoinQuery {
 
         return rdd;
     }
-
-    /* SingleTableScan  */
 
     public JavaPairRDD<LongWritable, Text> createSingleTableRDD(String hdfsPath,
                                                                 JoinQuery q) {
@@ -201,7 +168,7 @@ public class SparkJoinQuery {
                 Text.class, ctx.hadoopConfiguration());
     }
 
-    /* for tpch 6 */
+    /* SingleTableScan  */
 
     public JavaPairRDD<LongWritable, Text> createScanRDD(String dataset, JoinQuery q) {
 
@@ -216,7 +183,7 @@ public class SparkJoinQuery {
 
         conf.set("DATASET", dataset);
         conf.set("DATASET_QUERY", q.toString());
-        conf.set("PARTITION_KEY", "0") ;
+        conf.set("PARTITION_KEY", "0");
         conf.set("JOINALGO", joinStrategy);
         conf.set("DELIMITER", Delimiter);
 
@@ -244,10 +211,10 @@ public class SparkJoinQuery {
 
         dataset_splits = dataset_hpinput.getIndexScan(queryConf.getJustAccess(), q);
 
-        ArrayList<PartitionSplit> shuffleJoinSplit = new  ArrayList<PartitionSplit>();
+        ArrayList<PartitionSplit> shuffleJoinSplit = new ArrayList<PartitionSplit>();
 
 
-        JoinPlanner.extractShuffleJoin(q, dataset_splits,dataset_hpinput.getPartitionIdSizeMap(),shuffleJoinSplit,queryConf.getMaxSplitSize(), queryConf.getWorkerNum() );
+        JoinPlanner.extractShuffleJoin(q, dataset_splits, dataset_hpinput.getPartitionIdSizeMap(), shuffleJoinSplit, queryConf.getMaxSplitSize(), queryConf.getWorkerNum());
 
         String input = JoinPlanner.getShuffleJoinInputHelper(shuffleJoinSplit, dataset_hpinput);
 
@@ -258,5 +225,31 @@ public class SparkJoinQuery {
         JavaPairRDD<LongWritable, Text> rdd = createSingleTableRDD(hdfsPath, q);
 
         return rdd;
+    }
+
+    /* for tpch 6 */
+
+    public static class Mapper implements PairFunction<Tuple2<LongWritable, Tuple2<Text, Text>>, LongWritable, Text> {
+        String Delimiter;
+        String Splitter;
+        int partitionKey;
+
+        public Mapper(String Delimiter, int partitionKey) {
+            this.Delimiter = Delimiter;
+            this.partitionKey = partitionKey;
+            if (Delimiter.equals("|"))
+                Splitter = "\\|";
+            else
+                Splitter = Delimiter;
+        }
+
+        @Override
+        public Tuple2<LongWritable, Text> call(Tuple2<LongWritable, Tuple2<Text, Text>> x) throws Exception {
+            String s1 = x._2()._1().toString();
+            String s2 = x._2()._2().toString();
+            String value = s1 + Delimiter + s2;
+            long key = Long.parseLong(value.split(Splitter)[partitionKey]);
+            return new Tuple2<LongWritable, Text>(new LongWritable(key), new Text(value));
+        }
     }
 }

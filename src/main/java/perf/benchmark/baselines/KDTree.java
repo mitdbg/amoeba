@@ -20,24 +20,24 @@ public class KDTree extends RobustTree {
     @Override
     public void initProbe() {
         // Computes log(this.maxBuckets)
-		int maxDepth = 31 - Integer.numberOfLeadingZeros(this.maxBuckets);
-		System.out.println("Tree Depth: " + maxDepth);
+        int maxDepth = 31 - Integer.numberOfLeadingZeros(this.maxBuckets);
+        System.out.println("Tree Depth: " + maxDepth);
 
-		// Assumes number of levels less than number of attributes.
+        // Assumes number of levels less than number of attributes.
 
-		// Initialize root with attribute 0
-		LinkedList<Task> nodeQueue = new LinkedList<Task>();
-		Task initialTask = new Task();
-		initialTask.node = root;
-		initialTask.sample = this.sample;
-		initialTask.depth = 0;
-		nodeQueue.add(initialTask);
+        // Initialize root with attribute 0
+        LinkedList<Task> nodeQueue = new LinkedList<Task>();
+        Task initialTask = new Task();
+        initialTask.node = root;
+        initialTask.sample = this.sample;
+        initialTask.depth = 0;
+        nodeQueue.add(initialTask);
 
-		while (nodeQueue.size() > 0) {
-			Task t = nodeQueue.pollFirst();
-			if (t.depth < maxDepth) {
-				Pair<ParsedTupleList, ParsedTupleList> halves = null;
-				int dim = t.depth;
+        while (nodeQueue.size() > 0) {
+            Task t = nodeQueue.pollFirst();
+            if (t.depth < maxDepth) {
+                Pair<ParsedTupleList, ParsedTupleList> halves = null;
+                int dim = t.depth;
                 halves = t.sample.sortAndSplit(dim);
 
                 if (halves.first.size() == 0 ||
@@ -66,11 +66,11 @@ public class KDTree extends RobustTree {
                     tr.sample = halves.second;
                     nodeQueue.add(tr);
                 }
-			} else {
-				Bucket b = new Bucket();
-				b.setSample(sample);
-				t.node.bucket = b;
-			}
-		}
+            } else {
+                Bucket b = new Bucket();
+                b.setSample(sample);
+                t.node.bucket = b;
+            }
+        }
     }
 }

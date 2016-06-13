@@ -4,18 +4,30 @@ import core.utils.ConfUtils;
 import core.utils.HDFSUtils;
 
 public class ConvergenceWorkload {
-	ConfUtils cfg;
+    ConfUtils cfg;
 
-	int method;
+    int method;
 
-	public void setUp() {
-		cfg = new ConfUtils(BenchmarkSettings.conf);
-
-		// delete query history
-		// Cleanup queries file - to remove past query workload
-		HDFSUtils.deleteFile(HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME()),
-				cfg.getHDFS_WORKING_DIR() + "/queries", false);
-	}
+    public static void main(String[] args) {
+//		BenchmarkSettings.loadSettings(args);
+//		BenchmarkSettings.printSettings();
+//
+//		ConvergenceWorkload tc = new ConvergenceWorkload();
+//		tc.loadSettings(args);
+//		tc.setUp();
+//
+//		switch(tc.method) {
+//		case 0:
+//			tc.testConvergenceShipDateCyclic();
+//			break;
+//		case 1:
+//			tc.testConvergenceShipDateAdHoc();
+//			break;
+//		case 2:
+//			tc.testConvergenceShipDateDrillDown();
+//			break;
+//		}
+    }
 //
 //	// access shipdate in cyclic pattern, selectivity constant
 //	public void testConvergenceShipDateCyclic() {
@@ -148,24 +160,12 @@ public class ConvergenceWorkload {
 //		}
 //	}
 
-	public static void main(String[] args) {
-//		BenchmarkSettings.loadSettings(args);
-//		BenchmarkSettings.printSettings();
-//
-//		ConvergenceWorkload tc = new ConvergenceWorkload();
-//		tc.loadSettings(args);
-//		tc.setUp();
-//
-//		switch(tc.method) {
-//		case 0:
-//			tc.testConvergenceShipDateCyclic();
-//			break;
-//		case 1:
-//			tc.testConvergenceShipDateAdHoc();
-//			break;
-//		case 2:
-//			tc.testConvergenceShipDateDrillDown();
-//			break;
-//		}
-	}
+    public void setUp() {
+        cfg = new ConfUtils(BenchmarkSettings.conf);
+
+        // delete query history
+        // Cleanup queries file - to remove past query workload
+        HDFSUtils.deleteFile(HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME()),
+                cfg.getHDFS_WORKING_DIR() + "/queries", false);
+    }
 }

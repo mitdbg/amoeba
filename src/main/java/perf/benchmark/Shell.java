@@ -21,20 +21,30 @@ public class Shell {
 
     SparkQuery sq;
 
+    public static void main(String[] args) {
+        BenchmarkSettings.loadSettings(args);
+        BenchmarkSettings.printSettings();
+
+        Shell t = new Shell();
+        t.loadSettings(args);
+        t.setup();
+        t.run();
+    }
+
     public void loadSettings(String[] args) {
 
     }
 
     public void setup() {
         cfg = new ConfUtils(BenchmarkSettings.conf);
-		fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
+        fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
         sq = new SparkQuery(cfg);
     }
 
     public void run() {
         long start, end;
         BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
-        while(true) {
+        while (true) {
             System.out.print(">>>> ");
             try {
                 String queryString = console.readLine();
@@ -54,17 +64,7 @@ public class Shell {
         // TODO: Ideally we should close the stream.
     }
 
-	public long runQuery(Query q) {
-		return sq.createAdaptRDD(cfg.getHDFS_WORKING_DIR(), q).count();
-	}
-
-    public static void main(String[] args) {
-        BenchmarkSettings.loadSettings(args);
-		BenchmarkSettings.printSettings();
-
-        Shell t = new Shell();
-		t.loadSettings(args);
-		t.setup();
-        t.run();
+    public long runQuery(Query q) {
+        return sq.createAdaptRDD(cfg.getHDFS_WORKING_DIR(), q).count();
     }
 }

@@ -1,26 +1,15 @@
 package core.common.key;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import com.google.common.primitives.Ints;
-
-import core.common.globals.Globals;
 import core.utils.TypeUtils.SimpleDate;
-import core.utils.TypeUtils.TYPE;
 
 public class RawIndexKey implements Cloneable {
 
-    private SimpleDate dummyDate = new SimpleDate(0, 0, 0);
-
     protected byte[] bytes;
     protected int offset, length;
-
     protected int numAttrs;
     protected int[] attributeOffsets;
-
     protected char delimiter;
+    private SimpleDate dummyDate = new SimpleDate(0, 0, 0);
 
     public RawIndexKey(char delimiter) {
         this.delimiter = delimiter;
@@ -133,7 +122,7 @@ public class RawIndexKey implements Cloneable {
     }
 
     /*
-	 * Parse date assuming the format: "yyyy-MM-dd".
+     * Parse date assuming the format: "yyyy-MM-dd".
 	 * Skips anything after that.
 	 */
     public SimpleDate getDateAttribute(int index) {

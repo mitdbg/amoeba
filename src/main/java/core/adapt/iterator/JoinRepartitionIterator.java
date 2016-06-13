@@ -1,28 +1,23 @@
 package core.adapt.iterator;
 
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import core.common.globals.Globals;
-import core.common.index.JRNode;
-import core.common.index.JoinRobustTree;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.hadoop.io.Text;
-
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
-
 import core.adapt.HDFSPartition;
 import core.adapt.Partition;
 import core.adapt.Query;
-import core.common.index.RNode;
-import core.common.index.RobustTree;
+import core.common.globals.Globals;
+import core.common.index.JRNode;
+import core.common.index.JoinRobustTree;
 import core.utils.HDFSUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.hadoop.io.Text;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by ylu on 1/27/16.
@@ -52,10 +47,9 @@ public class JoinRepartitionIterator extends PartitionIterator {
     }
     */
 
-    private JRNode newIndexTree;
     protected String zookeeperHosts;
-
     protected Map<Integer, Partition> newPartitions = new HashMap<Integer, Partition>();
+    private JRNode newIndexTree;
     //protected Map<Integer, Partition> oldPartitions = new HashMap<Integer, Partition>();
 
     public JoinRepartitionIterator() {
@@ -77,6 +71,12 @@ public class JoinRepartitionIterator extends PartitionIterator {
     public JoinRepartitionIterator(Query query, JRNode tree) {
         this.query = query;
         this.newIndexTree = tree;
+    }
+
+    public static RepartitionIterator read(DataInput in) throws IOException {
+        RepartitionIterator it = new RepartitionIterator();
+        it.readFields(in);
+        return it;
     }
 
     public void setZookeeper(String zookeeperHosts) {
@@ -136,7 +136,7 @@ public class JoinRepartitionIterator extends PartitionIterator {
 
         p.write(record.getBytes(), 0, record.getBytes().length);
 
-        if (p.size() > 2 * 1024 * 1024 ){ // 2mb
+        if (p.size() > 2 * 1024 * 1024) { // 2mb
             p.store(true);
             newPartitions.remove(id);
         }
@@ -190,11 +190,5 @@ public class JoinRepartitionIterator extends PartitionIterator {
         String predicateString = Text.readString(in);
         query = new Query(predicateString);
         zookeeperHosts = Text.readString(in);
-    }
-
-    public static RepartitionIterator read(DataInput in) throws IOException {
-        RepartitionIterator it = new RepartitionIterator();
-        it.readFields(in);
-        return it;
     }
 }

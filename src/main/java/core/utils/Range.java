@@ -1,11 +1,10 @@
 package core.utils;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import core.utils.TypeUtils.SimpleDate;
 import org.apache.commons.math3.ml.clustering.Clusterable;
 
-import core.utils.TypeUtils.SimpleDate;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by qui on 7/9/15.
@@ -124,11 +123,11 @@ public class Range implements Cloneable, Clusterable {
                 return true;
             } else if (TypeUtils.compareTo(this.high, other.low, type) >= 0 && TypeUtils.compareTo(this.high, other.high, type) <= 0) {
                 return true;
-            } else if (TypeUtils.compareTo(this.low, other.low, type) <= 0 && TypeUtils.compareTo(this.high, other.high, type) >= 0){
+            } else if (TypeUtils.compareTo(this.low, other.low, type) <= 0 && TypeUtils.compareTo(this.high, other.high, type) >= 0) {
                 return true;
-            } else if (TypeUtils.compareTo(this.low, other.low, type) >= 0 && TypeUtils.compareTo(this.high, other.high, type) <= 0){
+            } else if (TypeUtils.compareTo(this.low, other.low, type) >= 0 && TypeUtils.compareTo(this.high, other.high, type) <= 0) {
                 return true;
-            } else{
+            } else {
                 return false;
             }
         }

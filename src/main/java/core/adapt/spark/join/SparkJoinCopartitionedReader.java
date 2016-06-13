@@ -3,11 +3,8 @@ package core.adapt.spark.join;
 import com.google.common.collect.ArrayListMultimap;
 import core.adapt.HDFSPartition;
 import core.adapt.JoinQuery;
-import core.adapt.Query;
 import core.adapt.iterator.IteratorRecord;
-import core.adapt.iterator.JoinRepartitionIterator;
 import core.adapt.iterator.PartitionIterator;
-import core.adapt.iterator.PostFilterIterator;
 import core.adapt.spark.SparkQueryConf;
 import core.adapt.spark.join.SparkJoinCopartitionedInputFormat.SparkJoinCopartitionedFileSplit;
 import core.utils.CuratorUtils;
@@ -30,6 +27,11 @@ import java.util.Iterator;
 public class SparkJoinCopartitionedReader extends
         RecordReader<LongWritable, Text> {
 
+    protected JoinQuery dataset1_joinquery, dataset2_joinquery;
+    ArrayListMultimap<Long, byte[]> hashTable;
+    Iterator<byte[]> firstRecords;
+    byte[] secondRecord;
+    CuratorFramework client;
     private Configuration conf;
     private SparkQueryConf queryConf;
     private SparkJoinCopartitionedFileSplit sparkSplit;
@@ -37,26 +39,12 @@ public class SparkJoinCopartitionedReader extends
     private int tupleCountInTable1, tupleCountInTable2;
     private LongWritable key;
     private Text value;
-
     private String dataset1, dataset2;
     private int join_attr1, join_attr2;
     private int partitionKey;
     private String delimiter, splitter;
-
-    protected JoinQuery dataset1_joinquery, dataset2_joinquery;
-
-    ArrayListMultimap<Long, byte[]> hashTable;
-
-    Iterator<byte[]> firstRecords;
-    byte[] secondRecord;
-
-
     private boolean hasNext;
-
     private int currentFile;
-
-    CuratorFramework client;
-
 
     @Override
     public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {

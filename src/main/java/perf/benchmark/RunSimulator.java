@@ -27,36 +27,45 @@ public class RunSimulator {
     // 1 => MultiPred
     int mode = -1;
 
-	public void loadSettings(String[] args) {
-		int counter = 0;
-		while (counter < args.length) {
-			switch (args[counter]) {
-			case "--tableName":
-				tableName = args[counter + 1];
-				counter += 2;
-				break;
-			case "--simName":
-				simName = args[counter+1];
-				counter += 2;
-				break;
-            case "--queriesFile":
-				queriesFile = args[counter + 1];
-				counter += 2;
-				break;
-            case "--mode":
-                mode = Integer.parseInt(args[counter + 1]);
-                counter += 2;
-                break;
-			default:
-				// Something we don't use
-				counter += 2;
-				break;
-			}
-		}
-	}
+    public static void main(String[] args) {
+        BenchmarkSettings.loadSettings(args);
+        BenchmarkSettings.printSettings();
 
+        RunSimulator t = new RunSimulator();
+        t.loadSettings(args);
+        t.setup();
+        t.run();
+    }
 
-	public void setup() {
+    public void loadSettings(String[] args) {
+        int counter = 0;
+        while (counter < args.length) {
+            switch (args[counter]) {
+                case "--tableName":
+                    tableName = args[counter + 1];
+                    counter += 2;
+                    break;
+                case "--simName":
+                    simName = args[counter + 1];
+                    counter += 2;
+                    break;
+                case "--queriesFile":
+                    queriesFile = args[counter + 1];
+                    counter += 2;
+                    break;
+                case "--mode":
+                    mode = Integer.parseInt(args[counter + 1]);
+                    counter += 2;
+                    break;
+                default:
+                    // Something we don't use
+                    counter += 2;
+                    break;
+            }
+        }
+    }
+
+    public void setup() {
         cfg = new ConfUtils(BenchmarkSettings.conf);
         List<Query> list = new ArrayList<>();
 
@@ -87,28 +96,20 @@ public class RunSimulator {
 
         queries = new Query[list.size()];
         queries = list.toArray(queries);
-	}
+    }
 
     public void run() {
-        Simulator sim  = new Simulator();
+        Simulator sim = new Simulator();
         sim.setUp(cfg, simName, tableName, queries);
 
         if (mode == 0) {
             sim.runOld();
         } else if (mode == 1) {
-            sim.run();
+            sim.runAdapt();
+        } else if (mode == 2) {
+            sim.runNoAdapt();
         } else {
-           System.out.println("Unknown mode");
+            System.out.println("Unknown mode");
         }
-    }
-
-    public static void main(String[] args) {
-        BenchmarkSettings.loadSettings(args);
-		BenchmarkSettings.printSettings();
-
-		RunSimulator t = new RunSimulator();
-		t.loadSettings(args);
-		t.setup();
-        t.run();
     }
 }

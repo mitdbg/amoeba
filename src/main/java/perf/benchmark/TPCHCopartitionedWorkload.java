@@ -4,18 +4,14 @@ package perf.benchmark;
  * Created by ylu on 4/25/16.
  */
 
-import core.adapt.spark.RangePartitioner;
+import core.adapt.JoinQuery;
+import core.adapt.Predicate;
 import core.adapt.spark.join.SparkJoinCopartitionedInputFormat;
-import core.adapt.spark.join.SparkJoinQuery;
-import core.adapt.spark.join.SparkJoinQueryConf;
 import core.common.globals.Schema;
 import core.common.globals.TableInfo;
 import core.utils.ConfUtils;
 import core.utils.HDFSUtils;
-import core.utils.RangePartitionerUtils;
 import core.utils.SparkUtils;
-import core.utils.TypeUtils.SimpleDate;
-import core.utils.TypeUtils.TYPE;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -25,61 +21,48 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.spark.HashPartitioner;
-import org.apache.spark.Partitioner;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.*;
-
-import core.adapt.JoinQuery;
-import core.adapt.Predicate;
-import core.adapt.Predicate.PREDTYPE;
-import core.utils.TypeUtils.SimpleDate;
-import core.utils.TypeUtils.TYPE;
-
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
+
+import java.io.IOException;
+import java.util.Random;
 
 public class TPCHCopartitionedWorkload {
 
 
-    public static class Mapper implements PairFunction<String, Long, String> {
-        String Delimiter;
-        String Splitter;
-        int partitionKey;
-        public Mapper(String Delimiter, int partitionKey) {
-            this.Delimiter = Delimiter;
-            this.partitionKey = partitionKey;
-            if (Delimiter.equals("|"))
-                Splitter = "\\|";
-            else
-                Splitter = Delimiter;
-        }
-
-        @Override
-        public Tuple2<Long, String> call(String v1) throws Exception {
-            long key = Long.parseLong(v1.split(Splitter)[partitionKey]);
-            return new Tuple2<Long, String>(key, v1);
-        }
-    }
-
     private ConfUtils cfg;
-
     private Schema schemaLineitem, schemaOrders;
     private String stringLineitem, stringOrders;
     private TableInfo tableLineitem, tableOrders;
-
     private String lineitem = "lineitem", orders = "orders";
     private Predicate[] EmptyPredicates = {};
-
     private Random rand;
     private int method;
+
+    public static void main(String[] args) {
+
+        BenchmarkSettings.loadSettings(args);
+        BenchmarkSettings.printSettings();
+
+        TPCHCopartitionedWorkload t = new TPCHCopartitionedWorkload();
+        t.loadSettings(args);
+        t.setUp();
+
+
+        switch (t.method) {
+            case 1:
+                t.runCopartitionedWorkload();
+                break;
+            default:
+                break;
+        }
+
+        //t.garbageCollect();
+    }
 
     public void setUp() {
         cfg = new ConfUtils(BenchmarkSettings.conf);
@@ -170,7 +153,6 @@ public class TPCHCopartitionedWorkload {
                 org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
 
 
-    
         JavaRDD<String> lineitem_text = ctx.textFile(cfg.getHDFS_WORKING_DIR() + "/lineitem/data");
         JavaRDD<String> orders_text = ctx.textFile(cfg.getHDFS_WORKING_DIR() + "/orders/data");
 
@@ -207,9 +189,9 @@ public class TPCHCopartitionedWorkload {
         conf.set("PARTITION_KEY", "0");
 
         conf.set("WORKING_DIR", cfg.getHDFS_WORKING_DIR());
-        conf.set("HADOOP_HOME",cfg.getHADOOP_HOME());
-        conf.set("ZOOKEEPER_HOSTS",cfg.getZOOKEEPER_HOSTS());
-        conf.setInt("HDFS_REPLICATION_FACTOR",cfg.getHDFS_REPLICATION_FACTOR());
+        conf.set("HADOOP_HOME", cfg.getHADOOP_HOME());
+        conf.set("ZOOKEEPER_HOSTS", cfg.getZOOKEEPER_HOSTS());
+        conf.setInt("HDFS_REPLICATION_FACTOR", cfg.getHDFS_REPLICATION_FACTOR());
         conf.set("DELIMITER", "|");
 
         JavaPairRDD<LongWritable, Text> rdd = ctx.newAPIHadoopFile(cfg.getHADOOP_NAMENODE() + cfg.getHDFS_WORKING_DIR(),
@@ -224,25 +206,24 @@ public class TPCHCopartitionedWorkload {
 
     }
 
+    public static class Mapper implements PairFunction<String, Long, String> {
+        String Delimiter;
+        String Splitter;
+        int partitionKey;
 
-    public static void main(String[] args) {
-
-        BenchmarkSettings.loadSettings(args);
-        BenchmarkSettings.printSettings();
-
-        TPCHCopartitionedWorkload t = new TPCHCopartitionedWorkload();
-        t.loadSettings(args);
-        t.setUp();
-
-
-        switch (t.method) {
-            case 1:
-                t.runCopartitionedWorkload();
-                break;
-            default:
-                break;
+        public Mapper(String Delimiter, int partitionKey) {
+            this.Delimiter = Delimiter;
+            this.partitionKey = partitionKey;
+            if (Delimiter.equals("|"))
+                Splitter = "\\|";
+            else
+                Splitter = Delimiter;
         }
 
-        //t.garbageCollect();
+        @Override
+        public Tuple2<Long, String> call(String v1) throws Exception {
+            long key = Long.parseLong(v1.split(Splitter)[partitionKey]);
+            return new Tuple2<Long, String>(key, v1);
+        }
     }
 }

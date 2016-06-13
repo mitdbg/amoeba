@@ -1,23 +1,14 @@
 package core.adapt.spark.join;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.*;
-
 import core.adapt.JoinQuery;
+import core.adapt.iterator.JoinRepartitionIterator;
 import core.adapt.iterator.PartitionIterator;
 import core.adapt.iterator.PostFilterIterator;
-import core.adapt.iterator.JoinRepartitionIterator;
 import core.adapt.spark.SparkQueryConf;
-
-
+import core.utils.ReflectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-
-
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -28,7 +19,12 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
-import core.utils.ReflectionUtils;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by ylu on 12/2/15.
@@ -44,67 +40,8 @@ public class SparkJoinInputFormat extends
     private Configuration conf;
     private SparkQueryConf queryConf;
 
-    private String dataset1,dataset2;
-    private JoinQuery dataset1_query,dataset2_query;
-
-    public static class SparkJoinFileSplit extends CombineFileSplit implements
-            Serializable {
-        private static final long serialVersionUID = 1L;
-
-        private PartitionIterator iter;
-        private int[] types;
-
-        public SparkJoinFileSplit() {
-        }
-
-        public SparkJoinFileSplit(Path[] files, long[] lengths, PartitionIterator iter, int[] types) {
-            super(files, lengths);
-            this.iter = iter;
-            this.types = types;
-        }
-
-        public PartitionIterator getIterator() {
-            return iter;
-        }
-
-        public int[] getTypes(){
-            return types;
-        }
-
-        @Override
-        public void write(DataOutput out) throws IOException {
-            super.write(out);
-
-            Text.writeString(out, iter.getClass().getName());
-            iter.write(out);
-
-            out.writeInt(types.length);
-            for(int i = 0; i < types.length; i ++){
-                out.writeInt(types[i]);
-            }
-        }
-
-        @Override
-        public void readFields(DataInput in) throws IOException {
-            super.readFields(in);
-
-            String type = Text.readString(in);
-            iter = (PartitionIterator) ReflectionUtils.getInstance(type);
-            iter.readFields(in);
-
-            int length = in.readInt();
-            types = new int[length];
-            for(int i = 0 ;i < length; i ++){
-                types[i] = in.readInt();
-            }
-        }
-
-        public static SparkJoinFileSplit read(DataInput in) throws IOException {
-            SparkJoinFileSplit s = new SparkJoinFileSplit();
-            s.readFields(in);
-            return s;
-        }
-    }
+    private String dataset1, dataset2;
+    private JoinQuery dataset1_query, dataset2_query;
 
     private SparkJoinFileSplit formSplits(Path[] paths1, long[] lengths1, Path[] paths2, long[] lengths2, PartitionIterator iter, int[] types) {
         int totalLength = paths1.length + paths2.length;
@@ -122,13 +59,13 @@ public class SparkJoinInputFormat extends
         return new SparkJoinFileSplit(paths, lengths, iter, types);
     }
 
-    void fill_data1(String[] data, String dataset, Path[] paths, long[] lens){
+    void fill_data1(String[] data, String dataset, Path[] paths, long[] lens) {
         int size = data.length;
 
         String hdfsDefaultName = conf.get("fs.default.name");
         String workingDir = queryConf.getWorkingDir();
 
-        for(int i = 0, j = 0; i < size; i += 2, j++){
+        for (int i = 0, j = 0; i < size; i += 2, j++) {
             int id = Integer.parseInt(data[i]);
             long length = Long.parseLong(data[i + 1]);
 
@@ -137,13 +74,13 @@ public class SparkJoinInputFormat extends
         }
     }
 
-    void fill_data2(String[] data, String dataset, Path[] paths, long[] lens, int[] types){
+    void fill_data2(String[] data, String dataset, Path[] paths, long[] lens, int[] types) {
         int size = data.length;
 
         String hdfsDefaultName = conf.get("fs.default.name");
         String workingDir = queryConf.getWorkingDir();
 
-        for(int i = 0, j = 0; i < size; i += 3, j++){
+        for (int i = 0, j = 0; i < size; i += 3, j++) {
             int id = Integer.parseInt(data[i]);
             long length = Long.parseLong(data[i + 1]);
             int type = Integer.parseInt(data[i + 2]);
@@ -152,6 +89,7 @@ public class SparkJoinInputFormat extends
             types[j] = type;
         }
     }
+
     @Override
     public List<InputSplit> getSplits(JobContext job) throws IOException {
 
@@ -169,7 +107,7 @@ public class SparkJoinInputFormat extends
 
         String dataset_info = conf.get("DATASETINFO");
 
-        if(dataset_info.length() == 0){
+        if (dataset_info.length() == 0) {
             return finalSplits;
         }
 
@@ -178,7 +116,7 @@ public class SparkJoinInputFormat extends
         PartitionIterator iter;
 
         String[] splits = dataset_info.split(";");
-        for(int i = 0 ;i < splits.length; i ++) {
+        for (int i = 0; i < splits.length; i++) {
             String[] subsplits = splits[i].split(",");
             int iter_type = Integer.parseInt(subsplits[0]);
 
@@ -221,5 +159,64 @@ public class SparkJoinInputFormat extends
             InputSplit arg0, TaskAttemptContext arg1) throws IOException,
             InterruptedException {
         return new SparkJoinRecordReader();
+    }
+
+    public static class SparkJoinFileSplit extends CombineFileSplit implements
+            Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private PartitionIterator iter;
+        private int[] types;
+
+        public SparkJoinFileSplit() {
+        }
+
+        public SparkJoinFileSplit(Path[] files, long[] lengths, PartitionIterator iter, int[] types) {
+            super(files, lengths);
+            this.iter = iter;
+            this.types = types;
+        }
+
+        public static SparkJoinFileSplit read(DataInput in) throws IOException {
+            SparkJoinFileSplit s = new SparkJoinFileSplit();
+            s.readFields(in);
+            return s;
+        }
+
+        public PartitionIterator getIterator() {
+            return iter;
+        }
+
+        public int[] getTypes() {
+            return types;
+        }
+
+        @Override
+        public void write(DataOutput out) throws IOException {
+            super.write(out);
+
+            Text.writeString(out, iter.getClass().getName());
+            iter.write(out);
+
+            out.writeInt(types.length);
+            for (int i = 0; i < types.length; i++) {
+                out.writeInt(types[i]);
+            }
+        }
+
+        @Override
+        public void readFields(DataInput in) throws IOException {
+            super.readFields(in);
+
+            String type = Text.readString(in);
+            iter = (PartitionIterator) ReflectionUtils.getInstance(type);
+            iter.readFields(in);
+
+            int length = in.readInt();
+            types = new int[length];
+            for (int i = 0; i < length; i++) {
+                types[i] = in.readInt();
+            }
+        }
     }
 }

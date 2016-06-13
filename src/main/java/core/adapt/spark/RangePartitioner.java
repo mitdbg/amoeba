@@ -12,7 +12,7 @@ public class RangePartitioner extends Partitioner {
 
     long[] ranges;
 
-    public RangePartitioner(String ranges){
+    public RangePartitioner(String ranges) {
         this.ranges = RangePartitionerUtils.getLongCutPoints(ranges);
     }
 
@@ -26,8 +26,8 @@ public class RangePartitioner extends Partitioner {
         //hard code, key can only be long
 
         long longKey = ((LongWritable) key).get();
-        for(int i = 0 ;i < ranges.length; i ++){
-            if(longKey <= ranges[i]){
+        for (int i = 0; i < ranges.length; i++) {
+            if (longKey <= ranges[i]) {
                 return i;
             }
         }

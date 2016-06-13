@@ -1,12 +1,6 @@
 package core.common.index;
 
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-
 import core.adapt.Predicate;
 import core.common.index.MDIndex.Bucket;
 import core.common.index.MDIndex.BucketInfo;
@@ -14,6 +8,8 @@ import core.common.key.RawIndexKey;
 import core.utils.TypeUtils;
 import core.utils.TypeUtils.SimpleDate;
 import core.utils.TypeUtils.TYPE;
+
+import java.util.*;
 
 
 /**

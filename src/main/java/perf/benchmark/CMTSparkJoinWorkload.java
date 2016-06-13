@@ -33,6 +33,24 @@ public class CMTSparkJoinWorkload {
     private JavaSparkContext ctx;
     private SQLContext sqlContext;
 
+    public static void main(String[] args) {
+
+        BenchmarkSettings.loadSettings(args);
+        BenchmarkSettings.printSettings();
+
+        CMTSparkJoinWorkload t = new CMTSparkJoinWorkload();
+        t.loadSettings(args);
+        t.setUp();
+
+        switch (t.method) {
+            case 1:
+                t.runWorkload();
+                break;
+            default:
+                break;
+        }
+    }
+
     public void setUp() {
         cfg = new ConfUtils(BenchmarkSettings.conf);
         rand = new Random();
@@ -164,7 +182,6 @@ public class CMTSparkJoinWorkload {
 
     }
 
-
     public void loadSettings(String[] args) {
         int counter = 0;
         while (counter < args.length) {
@@ -185,7 +202,6 @@ public class CMTSparkJoinWorkload {
         }
     }
 
-
     public ArrayList<String> generateWorkload() {
         byte[] stringBytes = HDFSUtils.readFile(
                 HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME()),
@@ -194,13 +210,12 @@ public class CMTSparkJoinWorkload {
         String[] queries = queriesString.split("\n");
         ArrayList<String> ret = new ArrayList<String>();
         for (int i = 0; i < queries.length; i++) {
-            String q = queries[i].replaceAll(";" , " and ");
+            String q = queries[i].replaceAll(";", " and ");
             ret.add(q);
         }
 
         return ret;
     }
-
 
     // sf ⋈ (mhl ⋈ mh)
     public void runWorkload() {
@@ -226,24 +241,6 @@ public class CMTSparkJoinWorkload {
             String result = df.collect()[0].toString();
             System.out.println("RES: Time Taken: " + (System.currentTimeMillis() - start) + "; Result: " + result);
 
-        }
-    }
-
-    public static void main(String[] args) {
-
-        BenchmarkSettings.loadSettings(args);
-        BenchmarkSettings.printSettings();
-
-        CMTSparkJoinWorkload t = new CMTSparkJoinWorkload();
-        t.loadSettings(args);
-        t.setUp();
-
-        switch (t.method) {
-            case 1:
-                t.runWorkload();
-                break;
-            default:
-                break;
         }
     }
 }

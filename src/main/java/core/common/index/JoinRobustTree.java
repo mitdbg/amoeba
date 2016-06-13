@@ -1,15 +1,6 @@
 package core.common.index;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Scanner;
-
 import core.adapt.Predicate;
 import core.common.globals.TableInfo;
 import core.common.key.ParsedTupleList;
@@ -17,23 +8,22 @@ import core.common.key.RawIndexKey;
 import core.utils.Pair;
 import core.utils.TypeUtils.TYPE;
 
+import java.util.*;
+
 /**
  * Created by ylu on 1/21/16.
  */
 
 
 public class JoinRobustTree implements MDIndex {
+    public static Random randGenerator = new Random();
     public TableInfo tableInfo;
-
     public int maxBuckets;
     public int numAttributes;
     public int joinAttributeDepth;
     public ParsedTupleList sample;
-
     public TYPE[] dimensionTypes;
     JRNode root;
-
-    public static Random randGenerator = new Random();
 
     public JoinRobustTree(TableInfo tableInfo) {
         this.root = new JRNode();
@@ -43,12 +33,84 @@ public class JoinRobustTree implements MDIndex {
     public JoinRobustTree() {
     }
 
-    public void setMaxBuckets(int maxBuckets) {
-        this.maxBuckets = maxBuckets;
+    /**
+     * Return the dimension which has the maximum allocation unfulfilled
+     */
+    public static int getLeastAllocated(double[] allocations, boolean[] validDims) {
+
+        boolean validFound = false;
+        double minAlloc = 0;
+
+        ArrayList<Integer> leastAllocated = new ArrayList<Integer>();
+
+        for (int i = 0; i < allocations.length; i++) {
+            if (validDims[i] == false) {
+                continue;
+            }
+            if (validFound == false) {
+                validFound = true;
+                minAlloc = allocations[i];
+                leastAllocated.add(i);
+            } else {
+                if (allocations[i] > minAlloc) {
+                    minAlloc = allocations[i];
+                    leastAllocated.clear();
+                    leastAllocated.add(i);
+                } else if (allocations[i] == minAlloc) {
+                    leastAllocated.add(i);
+                }
+            }
+        }
+
+        if (leastAllocated.size() == 1) {
+            return leastAllocated.get(0);
+        } else {
+            int r = randGenerator.nextInt(leastAllocated.size());
+            return leastAllocated.get(r);
+        }
+    }
+
+    public static void printNode(JRNode node) {
+        if (node.bucket != null) {
+            System.out.println("B " + node.bucket.getBucketId());
+        } else {
+            /*
+            System.out.format("Node: %d %s { ", node.attribute,
+                    node.value.toString());
+            printNode(node.leftChild);
+            System.out.print(" }{ ");
+            printNode(node.rightChild);
+            System.out.print(" }");
+            */
+            printNode(node.leftChild);
+            printNode(node.rightChild);
+        }
+    }
+
+    private static Map<Integer, BucketInfo> getBucketRangeSubtree(JRNode root,
+                                                                  int attribute) {
+        if (root.bucket != null) {
+            Map<Integer, BucketInfo> bucketRanges = new HashMap<Integer, BucketInfo>();
+            if (root.rangesByAttribute.get(attribute) != null) {
+                bucketRanges.put(root.bucket.getBucketId(),
+                        root.rangesByAttribute.get(attribute));
+            }
+            return bucketRanges;
+        } else {
+            Map<Integer, BucketInfo> bucketRanges = getBucketRangeSubtree(
+                    root.leftChild, attribute);
+            bucketRanges.putAll(getBucketRangeSubtree(root.rightChild,
+                    attribute));
+            return bucketRanges;
+        }
     }
 
     public int getMaxBuckets() {
         return maxBuckets;
+    }
+
+    public void setMaxBuckets(int maxBuckets) {
+        this.maxBuckets = maxBuckets;
     }
 
     @Override
@@ -86,12 +148,6 @@ public class JoinRobustTree implements MDIndex {
             return allGood;
         }
         return false;
-    }
-
-    public class Task {
-        JRNode node;
-        int depth;
-        ParsedTupleList sample;
     }
 
     /**
@@ -196,44 +252,6 @@ public class JoinRobustTree implements MDIndex {
         System.out.println("Final Allocations: " + Arrays.toString(allocations));
     }
 
-
-    /**
-     * Return the dimension which has the maximum allocation unfulfilled
-     */
-    public static int getLeastAllocated(double[] allocations, boolean[] validDims) {
-
-        boolean validFound = false;
-        double minAlloc = 0;
-
-        ArrayList<Integer> leastAllocated = new ArrayList<Integer>();
-
-        for (int i = 0; i < allocations.length; i++) {
-            if (validDims[i] == false) {
-                continue;
-            }
-            if (validFound == false) {
-                validFound = true;
-                minAlloc = allocations[i];
-                leastAllocated.add(i);
-            } else {
-                if (allocations[i] > minAlloc) {
-                    minAlloc = allocations[i];
-                    leastAllocated.clear();
-                    leastAllocated.add(i);
-                } else if (allocations[i] == minAlloc) {
-                    leastAllocated.add(i);
-                }
-            }
-        }
-
-        if (leastAllocated.size() == 1) {
-            return leastAllocated.get(0);
-        } else {
-            int r = randGenerator.nextInt(leastAllocated.size());
-            return leastAllocated.get(r);
-        }
-    }
-
     /**
      * Used in the 2nd phase of upfront to assign each tuple to the right
      */
@@ -241,7 +259,6 @@ public class JoinRobustTree implements MDIndex {
     public Object getBucketId(RawIndexKey key) {
         return root.getBucketId(key);
     }
-
 
     private void getAllBucketsHelper(JRNode node, ArrayList<Integer> ids) {
         if (node.bucket != null) {
@@ -358,43 +375,8 @@ public class JoinRobustTree implements MDIndex {
         printNode(root);
     }
 
-    public static void printNode(JRNode node) {
-        if (node.bucket != null) {
-            System.out.println("B " + node.bucket.getBucketId());
-        } else {
-            /*
-            System.out.format("Node: %d %s { ", node.attribute,
-                    node.value.toString());
-            printNode(node.leftChild);
-            System.out.print(" }{ ");
-            printNode(node.rightChild);
-            System.out.print(" }");
-            */
-            printNode(node.leftChild);
-            printNode(node.rightChild);
-        }
-    }
-
     public Map<Integer, BucketInfo> getBucketRanges(int attribute) {
         return getBucketRangeSubtree(this.getRoot(), attribute);
-    }
-
-    private static Map<Integer, BucketInfo> getBucketRangeSubtree(JRNode root,
-                                                                  int attribute) {
-        if (root.bucket != null) {
-            Map<Integer, BucketInfo> bucketRanges = new HashMap<Integer, BucketInfo>();
-            if (root.rangesByAttribute.get(attribute) != null) {
-                bucketRanges.put(root.bucket.getBucketId(),
-                        root.rangesByAttribute.get(attribute));
-            }
-            return bucketRanges;
-        } else {
-            Map<Integer, BucketInfo> bucketRanges = getBucketRangeSubtree(
-                    root.leftChild, attribute);
-            bucketRanges.putAll(getBucketRangeSubtree(root.rightChild,
-                    attribute));
-            return bucketRanges;
-        }
     }
 
     private void getAllocations_helper(JRNode node, int depth, double[] allocArray) {
@@ -443,5 +425,11 @@ public class JoinRobustTree implements MDIndex {
 
     public boolean isUpdated() {
         return isUpdated_helper(root);
+    }
+
+    public class Task {
+        JRNode node;
+        int depth;
+        ParsedTupleList sample;
     }
 }

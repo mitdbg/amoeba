@@ -1,13 +1,14 @@
 package perf.benchmark;
 
 
-import core.adapt.spark.RangePartitioner;
+import core.adapt.JoinQuery;
+import core.adapt.Predicate;
+import core.adapt.Predicate.PREDTYPE;
 import core.adapt.spark.join.SparkJoinQuery;
 import core.common.globals.Schema;
 import core.common.globals.TableInfo;
 import core.utils.ConfUtils;
 import core.utils.HDFSUtils;
-import core.utils.RangePartitionerUtils;
 import core.utils.TypeUtils.SimpleDate;
 import core.utils.TypeUtils.TYPE;
 import org.apache.commons.io.FilenameUtils;
@@ -16,22 +17,14 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
+import scala.Tuple2;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
-
-import core.adapt.JoinQuery;
-import core.adapt.Predicate;
-import core.adapt.Predicate.PREDTYPE;
-import core.utils.TypeUtils.SimpleDate;
-import core.utils.TypeUtils.TYPE;
-
-import org.apache.spark.api.java.JavaRDD;
-import scala.Tuple2;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.Random;
 
 /**
  * Created by ylu on 12/2/15.
@@ -39,16 +32,6 @@ import scala.Tuple2;
 
 
 public class TPCHJoinWorkload {
-
-    private ConfUtils cfg;
-
-    private Schema schemaCustomer, schemaLineitem, schemaOrders, schemaPart, schemaSupplier;
-    private String stringCustomer, stringLineitem, stringOrders, stringPart, stringSupplier;
-    private int sizeCustomer, sizeLineitem, sizeOrders, sizePart, sizeSupplier;
-    private TableInfo tableLineitem, tableCustomer, tableOrders, tableSupplier, tablePart;
-
-    private String lineitem = "lineitem", orders = "orders", customer = "customer", supplier = "supplier", part = "part";
-    private Predicate[] EmptyPredicates = {};
 
     private static String[] mktSegmentVals = new
             String[]{"AUTOMOBILE", "BUILDING", "FURNITURE", "HOUSEHOLD", "MACHINERY"};
@@ -58,7 +41,13 @@ public class TPCHJoinWorkload {
             String[]{"BRASS", "COPPER", "NICKEL", "STEEL", "TIN"};
     private static String[] shipModeVals = new
             String[]{"AIR", "FOB", "MAIL", "RAIL", "REG AIR", "SHIP", "TRUCK"};
-
+    private ConfUtils cfg;
+    private Schema schemaCustomer, schemaLineitem, schemaOrders, schemaPart, schemaSupplier;
+    private String stringCustomer, stringLineitem, stringOrders, stringPart, stringSupplier;
+    private int sizeCustomer, sizeLineitem, sizeOrders, sizePart, sizeSupplier;
+    private TableInfo tableLineitem, tableCustomer, tableOrders, tableSupplier, tablePart;
+    private String lineitem = "lineitem", orders = "orders", customer = "customer", supplier = "supplier", part = "part";
+    private Predicate[] EmptyPredicates = {};
     private SparkJoinQuery sq;
 
 
@@ -68,6 +57,48 @@ public class TPCHJoinWorkload {
 
     private Random rand;
 
+    public static void main(String[] args) {
+
+        BenchmarkSettings.loadSettings(args);
+        BenchmarkSettings.printSettings();
+
+        TPCHJoinWorkload t = new TPCHJoinWorkload();
+        t.loadSettings(args);
+        t.setUp();
+
+
+        switch (t.method) {
+            case 1:
+                t.runSwitchingWorkload();
+                break;
+            case 2:
+                t.runShiftingWorkload();
+                break;
+            case 3:
+                t.runUpfrontWorkload();
+                break;
+            case 4:
+                t.runBaseline();
+                break;
+            case 5:
+                t.runBufferSize();
+                break;
+            case 6:
+                t.runVaryingWindowWorkload();
+                break;
+            case 7:
+                t.joinLineitemWithOrders(false);
+                break;
+            case 8:
+                t.garbageCollect();
+                break;
+
+            default:
+                break;
+        }
+
+        //t.garbageCollect();
+    }
 
     public void setUp() {
         cfg = new ConfUtils(BenchmarkSettings.conf);
@@ -162,7 +193,6 @@ public class TPCHJoinWorkload {
         }
     }
 
-
     public void cleanup(String path) {
         FileSystem fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
         try {
@@ -171,6 +201,23 @@ public class TPCHJoinWorkload {
             e.printStackTrace();
         }
     }
+
+    /*
+        select
+            count(*)
+        from
+            customer,
+            orders,
+            lineitem
+        where
+            c_custkey = o_custkey
+            and l_orderkey = o_orderkey
+            and c_mktsegment = '[SEGMENT]'
+            and o_orderdate < date '[DATE]'
+            and l_shipdate > date '[DATE]'
+
+        (lineitem ⋈ orders) ⋈ customer
+     */
 
     public void postProcessing(String path, String tableName, Schema schema) {
 
@@ -210,19 +257,22 @@ public class TPCHJoinWorkload {
 
     /*
         select
-            count(*)
+	        count(*)
         from
             customer,
             orders,
-            lineitem
+            lineitem,
+            supplier
         where
             c_custkey = o_custkey
             and l_orderkey = o_orderkey
-            and c_mktsegment = '[SEGMENT]'
-            and o_orderdate < date '[DATE]'
-            and l_shipdate > date '[DATE]'
+            and l_suppkey = s_suppkey
+            and c_region = '[REGION]'
+            and s_region = '[REGION]'
+            and o_orderdate >= date '[DATE]'
+            and o_orderdate < date '[DATE]' + interval '1' year
 
-        (lineitem ⋈ orders) ⋈ customer
+        ((customer ⋈ orders) ⋈ (lineitem ⋈ supplier))
      */
 
     public void tpch3(boolean r_lineitem, boolean r_orders, boolean r_customer) {
@@ -284,24 +334,17 @@ public class TPCHJoinWorkload {
         //garbageCollect();
     }
 
+
     /*
         select
-	        count(*)
+            count(*)
         from
-            customer,
-            orders,
-            lineitem,
-            supplier
+            lineitem
         where
-            c_custkey = o_custkey
-            and l_orderkey = o_orderkey
-            and l_suppkey = s_suppkey
-            and c_region = '[REGION]'
-            and s_region = '[REGION]'
-            and o_orderdate >= date '[DATE]'
-            and o_orderdate < date '[DATE]' + interval '1' year
-
-        ((customer ⋈ orders) ⋈ (lineitem ⋈ supplier))
+            l_shipdate >= date '[DATE]'
+            and l_shipdate < date '[DATE]' + interval '1' year
+            and l_discount between [DISCOUNT] - 0.01 and [DISCOUNT] + 0.01
+            and l_quantity < [QUANTITY];
      */
 
     public void tpch5(boolean r_customer, boolean r_orders, boolean r_lineitem, boolean r_supplier) {
@@ -366,18 +409,24 @@ public class TPCHJoinWorkload {
         //garbageCollect();
     }
 
-
     /*
         select
             count(*)
         from
-            lineitem
+            part,
+            lineitem,
+            orders,
+            customer
         where
-            l_shipdate >= date '[DATE]'
-            and l_shipdate < date '[DATE]' + interval '1' year
-            and l_discount between [DISCOUNT] - 0.01 and [DISCOUNT] + 0.01
-            and l_quantity < [QUANTITY];
-     */
+            p_partkey = l_partkey
+            and l_orderkey = o_orderkey
+            and o_custkey = c_custkey
+            and c_region = '[REGION]'
+            and o_orderdate between date '1995-01-01' and date '1996-12-31'
+            and p_type = '[TYPE]'
+
+        (lineitem ⋈ part) ⋈  (orders ⋈ customer)
+    */
 
     public void tpch6(boolean r_lineitem) {
         int year_6 = 1993 + rand.nextInt(5);
@@ -412,20 +461,18 @@ public class TPCHJoinWorkload {
         select
             count(*)
         from
-            part,
-            lineitem,
             orders,
+            lineitem,
             customer
         where
-            p_partkey = l_partkey
-            and l_orderkey = o_orderkey
-            and o_custkey = c_custkey
-            and c_region = '[REGION]'
-            and o_orderdate between date '1995-01-01' and date '1996-12-31'
-            and p_type = '[TYPE]'
+            l_orderkey = o_orderkey
+            and c_custkey = o_custkey
+            and o_orderdate >= date '[DATE]'
+            and o_orderdate < date '[DATE]' + interval '3' month
+            and l_returnflag = 'R'
 
-        (lineitem ⋈ part) ⋈  (orders ⋈ customer)
-    */
+        (lineitem ⋈ orders) ⋈ customer
+     */
 
     public void tpch8(boolean r_lineitem, boolean r_part, boolean r_orders, boolean r_customer) {
 
@@ -490,18 +537,15 @@ public class TPCHJoinWorkload {
             count(*)
         from
             orders,
-            lineitem,
-            customer
+            lineitem
         where
-            l_orderkey = o_orderkey
-            and c_custkey = o_custkey
-            and o_orderdate >= date '[DATE]'
-            and o_orderdate < date '[DATE]' + interval '3' month
-            and l_returnflag = 'R'
+            o_orderkey = l_orderkey
+            and l_shipmode in ('[SHIPMODE1]', '[SHIPMODE2]')
+            and l_receiptdate >= date '[DATE]'
+            and l_receiptdate < date '[DATE]' + interval '1' year
 
-        (lineitem ⋈ orders) ⋈ customer
+        lineitem ⋈ orders
      */
-
 
     public void tpch10(boolean r_lineitem, boolean r_orders, boolean r_customer) {
 
@@ -553,15 +597,14 @@ public class TPCHJoinWorkload {
         select
             count(*)
         from
-            orders,
-            lineitem
+            lineitem,
+            part
         where
-            o_orderkey = l_orderkey
-            and l_shipmode in ('[SHIPMODE1]', '[SHIPMODE2]')
-            and l_receiptdate >= date '[DATE]'
-            and l_receiptdate < date '[DATE]' + interval '1' year
+            l_partkey = p_partkey
+            and l_shipdate >= date '[DATE]'
+            and l_shipdate < date '[DATE]' + interval '1' month;
 
-        lineitem ⋈ orders
+        lineitem ⋈ part
      */
 
     public void tpch12(boolean r_lineitem, boolean r_orders) {
@@ -611,9 +654,14 @@ public class TPCHJoinWorkload {
             lineitem,
             part
         where
-            l_partkey = p_partkey
-            and l_shipdate >= date '[DATE]'
-            and l_shipdate < date '[DATE]' + interval '1' month;
+            p_partkey = l_partkey
+            and l_shipinstruct = ‘DELIVER IN PERSON’
+            and p_brand = ‘[BRAND]’
+            and p_container = ‘SM CASE’
+            and l_quantity >= [QUANTITY]
+            and l_quantity <= [QUANTITY] + 10
+            and p_size between 1 and 5
+            and l_shipmode <= ‘AIR REG’
 
         lineitem ⋈ part
      */
@@ -648,25 +696,6 @@ public class TPCHJoinWorkload {
 
         //garbageCollect();
     }
-
-    /*
-        select
-            count(*)
-        from
-            lineitem,
-            part
-        where
-            p_partkey = l_partkey
-            and l_shipinstruct = ‘DELIVER IN PERSON’
-            and p_brand = ‘[BRAND]’
-            and p_container = ‘SM CASE’
-            and l_quantity >= [QUANTITY]
-            and l_quantity <= [QUANTITY] + 10
-            and p_size between 1 and 5
-            and l_shipmode <= ‘AIR REG’
-
-        lineitem ⋈ part
-     */
 
     public void tpch19(boolean r_lineitem, boolean r_part) {
 
@@ -752,7 +781,6 @@ public class TPCHJoinWorkload {
 
     }
 
-
     public void runSwitchingWorkload() {
         for (int i = 0; i < 160; i++) {
             if (i < 20) {
@@ -782,7 +810,6 @@ public class TPCHJoinWorkload {
             }
         }
     }
-
 
     public void runShiftingWorkload() {
 
@@ -876,7 +903,6 @@ public class TPCHJoinWorkload {
 
     }
 
-
     public void runUpfrontWorkload() {
 
         rand.setSeed(0);
@@ -965,7 +991,6 @@ public class TPCHJoinWorkload {
 
     }
 
-
     public void runBufferSize() {
         System.out.println("INFO: Running query, repartition");
 
@@ -1025,49 +1050,5 @@ public class TPCHJoinWorkload {
             tpch14(false, false);
         }
 
-    }
-
-
-    public static void main(String[] args) {
-
-        BenchmarkSettings.loadSettings(args);
-        BenchmarkSettings.printSettings();
-
-        TPCHJoinWorkload t = new TPCHJoinWorkload();
-        t.loadSettings(args);
-        t.setUp();
-
-
-        switch (t.method) {
-            case 1:
-                t.runSwitchingWorkload();
-                break;
-            case 2:
-                t.runShiftingWorkload();
-                break;
-            case 3:
-                t.runUpfrontWorkload();
-                break;
-            case 4:
-                t.runBaseline();
-                break;
-            case 5:
-                t.runBufferSize();
-                break;
-            case 6:
-                t.runVaryingWindowWorkload();
-                break;
-            case 7:
-                t.joinLineitemWithOrders(false);
-                break;
-            case 8:
-                t.garbageCollect();
-                break;
-
-            default:
-                break;
-        }
-
-        //t.garbageCollect();
     }
 }

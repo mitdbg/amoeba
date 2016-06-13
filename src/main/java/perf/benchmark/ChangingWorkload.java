@@ -4,22 +4,30 @@ import core.utils.ConfUtils;
 import core.utils.HDFSUtils;
 
 public class ChangingWorkload {
-	ConfUtils cfg;
-	final static String[] shipModes = new String[] { "REG AIR", "AIR", "RAIL",
-			"SHIP", "TRUCK", "MAIL", "FOB" };
+    final static String[] shipModes = new String[]{"REG AIR", "AIR", "RAIL",
+            "SHIP", "TRUCK", "MAIL", "FOB"};
+    public int method;
+    ConfUtils cfg;
+    int scaleFactor = 1000;
+    double selectivity = 0.05;
 
-	int scaleFactor = 1000;
-	double selectivity = 0.05;
-	public int method;
-
-	public void setUp() {
-		cfg = new ConfUtils(BenchmarkSettings.conf);
-
-		// delete query history
-		// Cleanup queries file - to remove past query workload
-		HDFSUtils.deleteFile(HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME()),
-				cfg.getHDFS_WORKING_DIR() + "/queries", false);
-	}
+    public static void main(String[] args) {
+//		BenchmarkSettings.loadSettings(args);
+//		BenchmarkSettings.printSettings();
+//
+//		ChangingWorkload tcw = new ChangingWorkload();
+//		tcw.loadSettings(args);
+//		tcw.setUp();
+//
+//		switch(tcw.method) {
+//		case 0:
+//			tcw.testChangingQueries();
+//			break;
+//		case 1:
+//			tcw.testSwitchingSets();
+//			break;
+//		}
+    }
 //
 //	public void runQuery(SparkQuery sq, int attr) {
 //		int range;
@@ -198,21 +206,12 @@ public class ChangingWorkload {
 //		}
 //	}
 
-	public static void main(String[] args) {
-//		BenchmarkSettings.loadSettings(args);
-//		BenchmarkSettings.printSettings();
-//
-//		ChangingWorkload tcw = new ChangingWorkload();
-//		tcw.loadSettings(args);
-//		tcw.setUp();
-//
-//		switch(tcw.method) {
-//		case 0:
-//			tcw.testChangingQueries();
-//			break;
-//		case 1:
-//			tcw.testSwitchingSets();
-//			break;
-//		}
-	}
+    public void setUp() {
+        cfg = new ConfUtils(BenchmarkSettings.conf);
+
+        // delete query history
+        // Cleanup queries file - to remove past query workload
+        HDFSUtils.deleteFile(HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME()),
+                cfg.getHDFS_WORKING_DIR() + "/queries", false);
+    }
 }

@@ -1,15 +1,17 @@
 package core.adapt.spark.join;
 
 
-import java.io.IOException;
-import java.util.Iterator;
-
 import com.google.common.collect.ArrayListMultimap;
+import core.adapt.HDFSPartition;
 import core.adapt.JoinQuery;
 import core.adapt.Query;
+import core.adapt.iterator.IteratorRecord;
 import core.adapt.iterator.JoinRepartitionIterator;
+import core.adapt.iterator.PartitionIterator;
 import core.adapt.iterator.PostFilterIterator;
 import core.adapt.spark.SparkQueryConf;
+import core.adapt.spark.join.SparkJoinInputFormat.SparkJoinFileSplit;
+import core.utils.CuratorUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -20,11 +22,8 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-import core.adapt.HDFSPartition;
-import core.adapt.iterator.IteratorRecord;
-import core.adapt.iterator.PartitionIterator;
-import core.adapt.spark.join.SparkJoinInputFormat.SparkJoinFileSplit;
-import core.utils.CuratorUtils;
+import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * Created by ylu on 12/2/15.
@@ -37,36 +36,25 @@ public class SparkJoinRecordReader extends
     protected Configuration conf;
     protected SparkQueryConf queryConf;
     protected SparkJoinFileSplit sparkSplit;
-
-    private int currentFile;
-    private int numFilesinDataset1;
-
-    private int tupleCountInTable1, tupleCountInTable2; // test only
-
-    private String dataset1, dataset2;
-    private int join_attr1, join_attr2;
-    private int partitionKey;
-    private String delimiter, splitter;
-
     protected PartitionIterator iter1;
     protected PartitionIterator iter2, pf_iter, jr_iter;
     protected int[] types;
     protected JoinQuery dataset1_joinquery, dataset2_joinquery;
     protected Query dataset2_query;
-
     ArrayListMultimap<Long, byte[]> hashTable;
-
     Iterator<byte[]> firstRecords;
     byte[] secondRecord;
-
     LongWritable key;
     Text value;
-
-
     boolean hasNext;
-
-
     CuratorFramework client;
+    private int currentFile;
+    private int numFilesinDataset1;
+    private int tupleCountInTable1, tupleCountInTable2; // test only
+    private String dataset1, dataset2;
+    private int join_attr1, join_attr2;
+    private int partitionKey;
+    private String delimiter, splitter;
 
     @Override
     public void initialize(InputSplit split, TaskAttemptContext context)
@@ -95,7 +83,7 @@ public class SparkJoinRecordReader extends
         tupleCountInTable1 = 0;
         tupleCountInTable2 = 0;
 
-        delimiter =  conf.get("DELIMITER");
+        delimiter = conf.get("DELIMITER");
         if (delimiter.equals("|"))
             splitter = "\\|";
         else
@@ -109,7 +97,6 @@ public class SparkJoinRecordReader extends
         pf_iter = new PostFilterIterator(dataset2_query);
         jr_iter = new JoinRepartitionIterator(dataset2_query);
         ((JoinRepartitionIterator) jr_iter).setZookeeper(queryConf.getZookeeperHosts());
-
 
 
         types = sparkSplit.getTypes();
@@ -153,7 +140,7 @@ public class SparkJoinRecordReader extends
         partition.loadNext(); // ???
 
 
-        if(types[currentFile- numFilesinDataset1] == 1){
+        if (types[currentFile - numFilesinDataset1] == 1) {
             iter2 = pf_iter;
         } else {
             iter2 = jr_iter;

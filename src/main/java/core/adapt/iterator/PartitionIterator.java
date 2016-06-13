@@ -1,174 +1,169 @@
 package core.adapt.iterator;
 
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import core.adapt.HDFSPartition;
+import core.adapt.Partition;
+import core.adapt.Predicate;
+import core.adapt.Query;
+import core.common.globals.Globals;
+import core.common.globals.TableInfo;
+import core.utils.BinaryUtils;
+import core.utils.ReflectionUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.ArrayUtils;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Iterator;
 
-import core.adapt.Query;
-import core.common.globals.TableInfo;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.ArrayUtils;
-
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
-
-import core.adapt.HDFSPartition;
-import core.adapt.Partition;
-import core.adapt.Predicate;
-import core.common.globals.Globals;
-import core.utils.BinaryUtils;
-import core.utils.ReflectionUtils;
-
 public class PartitionIterator implements Iterator<IteratorRecord> {
 
-	public enum ITERATOR {
-		SCAN, FILTER, REPART
-	};
+    protected static char newLine = '\n';
 
-	protected IteratorRecord record;
-	protected byte[] recordBytes;
-	protected byte[] brokenRecordBytes;
+    ;
+    protected IteratorRecord record;
+    protected byte[] recordBytes;
+    protected byte[] brokenRecordBytes;
+    protected byte[] bytes;
+    protected int bytesLength, offset, previous;
+    protected Partition partition;
+    protected Predicate[] predicates;
+    protected Query query;
 
-	protected static char newLine = '\n';
+    public PartitionIterator() {
 
-	protected byte[] bytes;
-	protected int bytesLength, offset, previous;
+    }
 
-	protected Partition partition;
+    public PartitionIterator(Query q) {
+        this.query = q;
+    }
 
-	protected Predicate[] predicates;
+    public static String iteratorToString(PartitionIterator itr) {
+        ByteArrayDataOutput dat = ByteStreams.newDataOutput();
+        try {
+            itr.write(dat);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to serialize the partitioner");
+        }
+        return itr.getClass().getName() + "@" + new String(dat.toByteArray());
+    }
 
-	protected Query query;
+    public static PartitionIterator stringToIterator(String itrString) {
+        String[] tokens = itrString.split("@", 2);
+        return (PartitionIterator) ReflectionUtils.getInstance(tokens[0],
+                new Class<?>[]{String.class}, new Object[]{tokens[1]});
+    }
 
-	public PartitionIterator() {
+    public void setPartition(Partition partition) {
+        this.partition = partition;
+        if (Globals.getTableInfo(query.getTable()) == null) {
+            String path = FilenameUtils.getPathNoEndSeparator(partition
+                    .getPath());
 
-	}
+            if (FilenameUtils.getBaseName(path).contains("partitions")
+                    || FilenameUtils.getBaseName(path).contains("repartition")) { // hack
+                path = FilenameUtils.getPathNoEndSeparator(FilenameUtils.getPath(path));
+            }
 
-	public PartitionIterator(Query q) {
-		this.query = q;
-	}
+            if (FilenameUtils.getBaseName(path).contains("data")) { // hack
+                path = FilenameUtils.getPathNoEndSeparator(FilenameUtils.getPath(path));
+            }
 
-	public void setPartition(Partition partition) {
-		this.partition = partition;
-		if (Globals.getTableInfo(query.getTable()) == null) {
-			String path = FilenameUtils.getPathNoEndSeparator(partition
-					.getPath());
+            // To remove table name.
+            path = FilenameUtils.getPathNoEndSeparator(FilenameUtils.getPath(path));
 
-			if (FilenameUtils.getBaseName(path).contains("partitions")
-					|| FilenameUtils.getBaseName(path).contains("repartition")) { // hack
-				path = FilenameUtils.getPathNoEndSeparator(FilenameUtils.getPath(path));
-			}
+            // Initialize Globals.
+            Globals.loadTableInfo(query.getTable(), path, ((HDFSPartition) partition).getFS());
+        }
 
-			if (FilenameUtils.getBaseName(path).contains("data")) { // hack
-				path = FilenameUtils.getPathNoEndSeparator(FilenameUtils.getPath(path));
-			}
+        TableInfo tableInfo = Globals.getTableInfo(query.getTable());
+        record = new IteratorRecord(tableInfo.delimiter);
+        bytes = partition.getNextBytes();
+        // bytesLength = partition.getSize();
+        bytesLength = bytes == null ? 0 : bytes.length;
+        offset = 0;
+        previous = 0;
+        brokenRecordBytes = null;
+    }
 
-			// To remove table name.
-			path = FilenameUtils.getPathNoEndSeparator(FilenameUtils.getPath(path));
+    @Override
+    public boolean hasNext() {
+        for (; offset < bytesLength; offset++) {
+            if (bytes[offset] == newLine) {
+                // record.setBytes(bytes, previous, offset-previous);
+                recordBytes = ArrayUtils.subarray(bytes, previous, offset);
+                if (brokenRecordBytes != null) {
+                    recordBytes = BinaryUtils.concatenate(brokenRecordBytes,
+                            recordBytes);
+                    brokenRecordBytes = null;
+                }
 
-			// Initialize Globals.
-			Globals.loadTableInfo(query.getTable(), path, ((HDFSPartition) partition).getFS());
-		}
+                try {
+                    record.setBytes(recordBytes);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println("Index out of bounds while setting bytes: "
+                            + (new String(recordBytes)));
+                    throw e;
+                }
 
-		TableInfo tableInfo = Globals.getTableInfo(query.getTable());
-		record = new IteratorRecord(tableInfo.delimiter);
-		bytes = partition.getNextBytes();
-		// bytesLength = partition.getSize();
-		bytesLength = bytes == null ? 0 : bytes.length;
-		offset = 0;
-		previous = 0;
-		brokenRecordBytes = null;
-	}
+                previous = ++offset;
+                if (isRelevant(record)) {
+                    // System.out.println("relevant record found ..");
+                    return true;
+                } else
+                    continue;
+            }
+        }
 
-	@Override
-	public boolean hasNext() {
-		for (; offset < bytesLength; offset++) {
-			if (bytes[offset] == newLine) {
-				// record.setBytes(bytes, previous, offset-previous);
-				recordBytes = ArrayUtils.subarray(bytes, previous, offset);
-				if (brokenRecordBytes != null) {
-					recordBytes = BinaryUtils.concatenate(brokenRecordBytes,
-							recordBytes);
-					brokenRecordBytes = null;
-				}
+        if (previous < bytesLength)
+            brokenRecordBytes = BinaryUtils.getBytes(bytes, previous,
+                    bytesLength - previous);
+        else
+            brokenRecordBytes = null;
 
-				try {
-					record.setBytes(recordBytes);
-				} catch (ArrayIndexOutOfBoundsException e) {
-					System.out.println("Index out of bounds while setting bytes: "
-									+ (new String(recordBytes)));
-					throw e;
-				}
+        bytes = partition == null ? null : partition.getNextBytes();
+        if (bytes != null) {
+            bytesLength = bytes.length;
+            offset = 0;
+            previous = 0;
+            return hasNext();
+        } else
+            return false;
+    }
 
-				previous = ++offset;
-				if (isRelevant(record)) {
-					// System.out.println("relevant record found ..");
-					return true;
-				} else
-					continue;
-			}
-		}
+    protected boolean isRelevant(IteratorRecord record) {
+        return true;
+    }
 
-		if (previous < bytesLength)
-			brokenRecordBytes = BinaryUtils.getBytes(bytes, previous,
-					bytesLength - previous);
-		else
-			brokenRecordBytes = null;
+    @Override
+    public void remove() {
+        next();
+    }
 
-		bytes = partition == null ? null : partition.getNextBytes();
-		if (bytes != null) {
-			bytesLength = bytes.length;
-			offset = 0;
-			previous = 0;
-			return hasNext();
-		} else
-			return false;
-	}
+    @Override
+    public IteratorRecord next() {
+        return record;
+    }
 
-	protected boolean isRelevant(IteratorRecord record) {
-		return true;
-	}
+    public void finish() {
+    }
 
-	@Override
-	public void remove() {
-		next();
-	}
+    public void write(DataOutput out) throws IOException {
+    }
 
-	@Override
-	public IteratorRecord next() {
-		return record;
-	}
+    // public static PartitionIterator read(DataInput in) throws IOException {
+    // PartitionIterator it = new PartitionIterator();
+    // it.readFields(in);
+    // return it;
+    // }
 
-	public void finish() {
-	}
+    public void readFields(DataInput in) throws IOException {
+    }
 
-	public void write(DataOutput out) throws IOException {
-	}
-
-	public void readFields(DataInput in) throws IOException {
-	}
-
-	// public static PartitionIterator read(DataInput in) throws IOException {
-	// PartitionIterator it = new PartitionIterator();
-	// it.readFields(in);
-	// return it;
-	// }
-
-	public static String iteratorToString(PartitionIterator itr) {
-		ByteArrayDataOutput dat = ByteStreams.newDataOutput();
-		try {
-			itr.write(dat);
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException("Failed to serialize the partitioner");
-		}
-		return itr.getClass().getName() + "@" + new String(dat.toByteArray());
-	}
-
-	public static PartitionIterator stringToIterator(String itrString) {
-		String[] tokens = itrString.split("@", 2);
-		return (PartitionIterator) ReflectionUtils.getInstance(tokens[0],
-				new Class<?>[] { String.class }, new Object[] { tokens[1] });
-	}
+    public enum ITERATOR {
+        SCAN, FILTER, REPART
+    }
 }

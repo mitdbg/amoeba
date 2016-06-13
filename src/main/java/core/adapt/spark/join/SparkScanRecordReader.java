@@ -4,10 +4,9 @@ import core.adapt.HDFSPartition;
 import core.adapt.JoinQuery;
 import core.adapt.Query;
 import core.adapt.iterator.IteratorRecord;
-import core.adapt.iterator.JoinRepartitionIterator;
 import core.adapt.iterator.PartitionIterator;
-import core.adapt.iterator.PostFilterIterator;
 import core.adapt.spark.SparkQueryConf;
+import core.adapt.spark.join.SparkScanInputFormat.SparkScanFileSplit;
 import core.utils.CuratorUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.conf.Configuration;
@@ -18,8 +17,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import core.adapt.spark.join.SparkScanInputFormat.SparkScanFileSplit;
-
 
 import java.io.IOException;
 
@@ -72,9 +69,10 @@ public class SparkScanRecordReader extends
 
         sparkSplit = (SparkScanFileSplit) split;
 
-        JoinQuery jq =  new JoinQuery(conf.get("DATASET_QUERY"));;
+        JoinQuery jq = new JoinQuery(conf.get("DATASET_QUERY"));
+        ;
 
-        query =  jq.castToQuery();
+        query = jq.castToQuery();
         join_attr = jq.getJoinAttribute();
 
 

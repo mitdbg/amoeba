@@ -1,25 +1,17 @@
 package core.adapt.opt;
 
 
-import java.io.IOException;
-import java.util.*;
-
+import core.adapt.AccessMethod.PartitionSplit;
 import core.adapt.JoinQuery;
+import core.adapt.Predicate;
 import core.adapt.iterator.JoinRepartitionIterator;
+import core.adapt.iterator.PartitionIterator;
+import core.adapt.iterator.PostFilterIterator;
+import core.adapt.iterator.RepartitionIterator;
 import core.adapt.spark.join.SparkJoinQueryConf;
 import core.common.globals.TableInfo;
 import core.common.index.JRNode;
 import core.common.index.JoinRobustTree;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
-import core.adapt.Predicate;
-import core.adapt.AccessMethod.PartitionSplit;
-import core.adapt.iterator.PartitionIterator;
-import core.adapt.iterator.PostFilterIterator;
-import core.adapt.iterator.RepartitionIterator;
-
-
 import core.common.index.MDIndex.Bucket;
 import core.common.key.ParsedTupleList;
 import core.utils.ConfUtils;
@@ -27,6 +19,11 @@ import core.utils.HDFSUtils;
 import core.utils.Pair;
 import core.utils.TypeUtils;
 import core.utils.TypeUtils.TYPE;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
+import java.io.IOException;
+import java.util.*;
 /**
  * Created by ylu on 1/21/16.
  */
@@ -313,8 +310,8 @@ public class JoinOptimizer {
         }
     }
 
-    public void markUpdatedBucket(JRNode node){
-        if(node.bucket != null){
+    public void markUpdatedBucket(JRNode node) {
+        if (node.bucket != null) {
             node.updated = true;
             return;
         }
@@ -386,10 +383,9 @@ public class JoinOptimizer {
         PartitionSplit[] psplits;
 
         if (updated) {
-            if(fullRepartition){
+            if (fullRepartition) {
                 psplits = this.getPartitionSplits(q, allNodes);
-            }
-            else {
+            } else {
                 psplits = this.getPartitionSplits(q, nodes);
             }
 
@@ -463,10 +459,10 @@ public class JoinOptimizer {
         List<Integer> unmodifiedBuckets = new ArrayList<Integer>();
         List<Integer> modifiedBuckets = new ArrayList<Integer>();
 
-        for(JRNode node : nodes){
-            if (node.updated == false){
+        for (JRNode node : nodes) {
+            if (node.updated == false) {
                 unmodifiedBuckets.add(node.bucket.getBucketId());
-            }else{
+            } else {
                 modifiedBuckets.add(node.bucket.getBucketId());
             }
         }
@@ -731,7 +727,8 @@ public class JoinOptimizer {
     private boolean isBottomLevelNode(JRNode node) {
         return node.leftChild.bucket != null && node.rightChild.bucket != null;
     }
-    private boolean isNotBottomLevelNode(JRNode node){
+
+    private boolean isNotBottomLevelNode(JRNode node) {
         return node.leftChild.bucket == null && node.rightChild.bucket == null;
     }
 
@@ -752,7 +749,6 @@ public class JoinOptimizer {
         // Check if both sides are accessed
         boolean goLeft = checkIfGoLeft(node, ps);
         boolean goRight = checkIfGoRight(node, ps);
-
 
 
         //System.out.println("attribute: " + node.attribute + " value: " + node.value + " goleft: " + goLeft + " goRight: " + goRight);
@@ -810,7 +806,7 @@ public class JoinOptimizer {
                     }
                 }
 
-            } else  if (isNotBottomLevelNode(node)){
+            } else if (isNotBottomLevelNode(node)) {
                 // Swap down the attribute and bring p above
 
                 if (node.leftChild.fullAccessed && node.rightChild.fullAccessed) {
@@ -891,9 +887,9 @@ public class JoinOptimizer {
 
     }
 
-    public void checkNotEmpty(JRNode r){
-        if(r.bucket !=null){
-            if (r.bucket.getSample().size() == 0){
+    public void checkNotEmpty(JRNode r) {
+        if (r.bucket != null) {
+            if (r.bucket.getSample().size() == 0) {
                 System.out.println(r.bucket.getBucketId());
             }
             return;

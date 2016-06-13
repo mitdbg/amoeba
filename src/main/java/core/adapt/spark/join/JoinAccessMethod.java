@@ -3,8 +3,6 @@ package core.adapt.spark.join;
 import core.adapt.AccessMethod.PartitionSplit;
 import core.adapt.JoinQuery;
 import core.adapt.Predicate;
-import core.adapt.iterator.PartitionIterator;
-
 import core.adapt.opt.JoinOptimizer;
 import core.common.globals.Globals;
 import core.common.globals.TableInfo;
@@ -21,13 +19,12 @@ import core.utils.HDFSUtils;
  * dataset. The filter could be extracted as: - the selection predicate in
  * selection query - the sub-range filter (different for each node) in
  * join/aggregate query
- *
+ * <p/>
  * Currently, we support filtering only on one attribute at a time, i.e. we
  * expect the query processor to filter on the most selective attribute.
- *
+ * <p/>
  * Filter query: - can access only the local blocks on each node - scan over
  * partitioned portion - crack over non-partitioned portion
- *
  */
 
 public class JoinAccessMethod {
@@ -74,7 +71,7 @@ public class JoinAccessMethod {
      * This method is used to: 1. lookup the partition index for relevant
      * partitions 2. and, to create splits of partitions which could be assigned
      * to different node.
-     *
+     * <p/>
      * The split thus produced must be: (a) equal in size (b) contain blocks
      * from the same sub-tree
      *
