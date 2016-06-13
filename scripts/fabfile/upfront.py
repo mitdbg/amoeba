@@ -204,3 +204,12 @@ def upfront_spark_tpch_queries():
         cmd = fill_cmd(cmd)
         run(cmd)
 
+@roles('master')
+def print_unique_tpch_queries():
+    with cd(env.conf['HADOOPBIN']):
+        cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+            ' --conf $CONF' + \
+            ' --method 5 > ~/logs/tpch_unique_queries.log'
+        cmd = fill_cmd(cmd)
+        run(cmd)
+

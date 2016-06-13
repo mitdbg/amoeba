@@ -11,7 +11,7 @@ LOCAL = {
     }
 
 SERVER = {
-    'JAR' : '/data/mdindex/jars/mdindex-all.jar',
+    'JAR' : '/data/mdindex/jars/amoeba-all.jar',
     'CONF' : '/home/mdindex/amoeba.properties',
     'SPARKSUBMIT': '/home/mdindex/spark-1.6.0-bin-hadoop2.6/bin/spark-submit',
     'HADOOPBIN' : '~/hadoop-2.6.0/bin/',
@@ -20,6 +20,18 @@ SERVER = {
     'USER' : 'mdindex',
     'HOSTS' : ['istc1.csail.mit.edu', 'istc3.csail.mit.edu', 'istc6.csail.mit.edu', 'istc7.csail.mit.edu', 'istc8.csail.mit.edu', 'istc9.csail.mit.edu', 'istc10.csail.mit.edu', 'istc11.csail.mit.edu', 'istc12.csail.mit.edu', 'istc13.csail.mit.edu'],
     'ROLEDEFS' : { 'master': ['istc13.csail.mit.edu'] },
+    }
+
+SERVER1 = {
+    'JAR' : '/data/mdindex/jars/amoeba-all.jar',
+    'CONF' : '/home/mdindex/amoeba.properties',
+    'SPARKSUBMIT': '/home/mdindex/spark-1.6.0-bin-hadoop2.6/bin/spark-submit',
+    'HADOOPBIN' : '~/hadoop-2.6.0/bin/',
+    'HOMEDIR' : '/home/mdindex/',
+    'HDFSDIR' : '/user/amoeba',
+    'USER' : 'mdindex',
+    'HOSTS' : ['istc2.csail.mit.edu'],
+    'ROLEDEFS' : { 'master': ['istc2.csail.mit.edu'] },
     }
 
 confs = {
@@ -53,6 +65,18 @@ confs = {
         'DELIMITER': '|',
         'NUMBUCKETS' : '16',
         'NUMTUPLES': '6001215',
+        'NUMFIELDS' : '38',
+        'SCHEMA': 'l_linenumber int, l_quantity double, l_extendedprice double, l_discount double, l_tax double, l_returnflag string,  l_linestatus string, l_shipdate date, l_commitdate date, l_receiptdate date, l_shipinstruct string, l_shipmode string, o_orderstatus string, o_totalprice double, o_orderdate date, o_orderpriority string, o_clerk string, o_shippriority int, p_name string, p_mfgr string, p_brand string, p_type string, p_size int, p_container string, p_retailprice double, s_name string, s_address string, s_phone string, s_acctbal double, s_nation string, s_region string, c_name string, c_address string, c_phone string, c_acctbal double, c_mktsegment string, c_nation string, c_region string',
+        },
+    "tpch_one": {
+        'TYPE' : SERVER1,
+        'TABLENAME' : 'tpch',
+        'INPUTSDIR' : '/data/mdindex/tpchd100/',
+        'HADOOPBIN' : '~/hadoop-2.6.0/bin/',
+        'SAMPLINGRATE' : '0.002',
+        'DELIMITER': '|',
+        'NUMBUCKETS' : '4096',
+        'NUMTUPLES' : '600000000',
         'NUMFIELDS' : '38',
         'SCHEMA': 'l_linenumber int, l_quantity double, l_extendedprice double, l_discount double, l_tax double, l_returnflag string,  l_linestatus string, l_shipdate date, l_commitdate date, l_receiptdate date, l_shipinstruct string, l_shipmode string, o_orderstatus string, o_totalprice double, o_orderdate date, o_orderpriority string, o_clerk string, o_shippriority int, p_name string, p_mfgr string, p_brand string, p_type string, p_size int, p_container string, p_retailprice double, s_name string, s_address string, s_phone string, s_acctbal double, s_nation string, s_region string, c_name string, c_address string, c_phone string, c_acctbal double, c_mktsegment string, c_nation string, c_region string',
         },

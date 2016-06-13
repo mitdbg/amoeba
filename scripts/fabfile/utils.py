@@ -51,13 +51,13 @@ def build_jar():
 def update_jar():
     if not exists('/data/mdindex/jars'):
         run('mkdir -p /data/mdindex/jars')
-    put('../build/libs/mdindex-all.jar', '/data/mdindex/jars/')
+    put('../build/libs/amoeba-all.jar', '/data/mdindex/jars/')
 
 @roles('master')
 def update_master_jar():
     if not exists('/data/mdindex/jars'):
         run('mkdir -p /data/mdindex/jars')
-    put('../build/libs/mdindex-all.jar', '/data/mdindex/jars/')
+    put('../build/libs/amoeba-all.jar', '/data/mdindex/jars/')
 
 @serial
 def update_config():
