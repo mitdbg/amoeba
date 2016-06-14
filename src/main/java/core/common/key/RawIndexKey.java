@@ -2,14 +2,18 @@ package core.common.key;
 
 import core.utils.TypeUtils.SimpleDate;
 
-public class RawIndexKey implements Cloneable {
+import java.io.IOException;
+import java.io.Serializable;
 
-    protected byte[] bytes;
-    protected int offset, length;
-    protected int numAttrs;
-    protected int[] attributeOffsets;
+public class RawIndexKey implements Cloneable, Serializable {
+
+    protected transient byte[] bytes;
+    protected transient int offset, length;
+    protected transient int numAttrs;
+    protected transient int[] attributeOffsets;
+
     protected char delimiter;
-    private SimpleDate dummyDate = new SimpleDate(0, 0, 0);
+    private transient SimpleDate dummyDate = new SimpleDate(0, 0, 0);
 
     public RawIndexKey(char delimiter) {
         this.delimiter = delimiter;
@@ -23,6 +27,7 @@ public class RawIndexKey implements Cloneable {
     @Override
     public RawIndexKey clone() throws CloneNotSupportedException {
         RawIndexKey k = (RawIndexKey) super.clone();
+        k.delimiter = this.delimiter;
         k.dummyDate = new SimpleDate(0, 0, 0);
         return k;
     }
@@ -94,6 +99,10 @@ public class RawIndexKey implements Cloneable {
         int ret = Integer.parseInt(new String(bytes, off, len));
 
         return ret;
+    }
+
+    public char getDelimiter() {
+        return this.delimiter;
     }
 
     public long getLongAttribute(int index) {
@@ -177,5 +186,11 @@ public class RawIndexKey implements Cloneable {
     public String toString() {
         String result = String.valueOf(delimiter);
         return result;
+    }
+
+    private void readObject(java.io.ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        dummyDate = new SimpleDate(0,0,0);
     }
 }

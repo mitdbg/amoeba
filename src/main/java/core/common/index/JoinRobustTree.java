@@ -256,7 +256,7 @@ public class JoinRobustTree implements MDIndex {
      * Used in the 2nd phase of upfront to assign each tuple to the right
      */
     @Override
-    public Object getBucketId(RawIndexKey key) {
+    public Integer getBucketId(RawIndexKey key) {
         return root.getBucketId(key);
     }
 
@@ -349,7 +349,6 @@ public class JoinRobustTree implements MDIndex {
     public void initializeBucketSamplesAndCounts(JRNode n,
                                                  ParsedTupleList sample, final double totalSamples,
                                                  final double totalTuples) {
-
         if (n.bucket != null) {
             long sampleSize = sample.size();
             double numTuples = (sampleSize * totalTuples) / totalSamples;

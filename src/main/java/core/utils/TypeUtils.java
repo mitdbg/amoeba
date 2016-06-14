@@ -1,5 +1,6 @@
 package core.utils;
 
+import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
@@ -134,7 +135,7 @@ public class TypeUtils {
         BOOLEAN, INT, LONG, DOUBLE, STRING, DATE, VARCHAR
     }
 
-    public static class SimpleDate implements Comparable<SimpleDate> {
+    public static class SimpleDate implements Comparable<SimpleDate>,Serializable {
         public static int[] daysPerMonth = new int[]{31, 28, 31, 30, 31, 30,
                 31, 31, 30, 31, 30, 31};
         private int year, month, day;

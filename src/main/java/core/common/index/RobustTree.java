@@ -10,17 +10,17 @@ import core.utils.TypeUtils.TYPE;
 import java.util.*;
 
 public class RobustTree implements MDIndex {
-    public static Random randGenerator = new Random();
+    public transient static Random randGenerator = new Random();
     // TODO: Add capacity
-    static List<Integer> leastAllocated = new ArrayList<>(20);
+    transient static List<Integer> leastAllocated = new ArrayList<>(50);
     /**
      * Return the dimension which has the maximum allocation unfulfilled
      */
-    static int countCalled = -1;
-    public TableInfo tableInfo;
+    transient static int countCalled = -1;
+    transient public ParsedTupleList sample;
+    transient public TableInfo tableInfo;
     public int maxBuckets;
     public int numAttributes;
-    public ParsedTupleList sample;
     public TYPE[] dimensionTypes;
     public RNode root;
 
@@ -64,24 +64,6 @@ public class RobustTree implements MDIndex {
             System.out.print(" }{ ");
             printNode(node.rightChild);
             System.out.print(" }");
-        }
-    }
-
-    private static Map<Integer, BucketInfo> getBucketRangeSubtree(RNode root,
-                                                                  int attribute) {
-        if (root.bucket != null) {
-            Map<Integer, BucketInfo> bucketRanges = new HashMap<Integer, BucketInfo>();
-            if (root.rangesByAttribute.get(attribute) != null) {
-                bucketRanges.put(root.bucket.getBucketId(),
-                        root.rangesByAttribute.get(attribute));
-            }
-            return bucketRanges;
-        } else {
-            Map<Integer, BucketInfo> bucketRanges = getBucketRangeSubtree(
-                    root.leftChild, attribute);
-            bucketRanges.putAll(getBucketRangeSubtree(root.rightChild,
-                    attribute));
-            return bucketRanges;
         }
     }
 
@@ -267,7 +249,7 @@ public class RobustTree implements MDIndex {
      * Used in the 2nd phase of upfront to assign each tuple to the right
      */
     @Override
-    public Object getBucketId(RawIndexKey key) {
+    public Integer getBucketId(RawIndexKey key) {
         return root.getBucketId(key);
     }
 
@@ -380,10 +362,6 @@ public class RobustTree implements MDIndex {
      */
     public void printTree() {
         printNode(root);
-    }
-
-    public Map<Integer, BucketInfo> getBucketRanges(int attribute) {
-        return getBucketRangeSubtree(this.getRoot(), attribute);
     }
 
     public double[] getAllocations() {

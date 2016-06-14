@@ -8,6 +8,7 @@ import core.utils.TypeUtils;
 import core.utils.TypeUtils.SimpleDate;
 import core.utils.TypeUtils.TYPE;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -15,18 +16,16 @@ import java.util.*;
  *
  * @author anil
  */
-public class RNode {
+public class RNode implements Serializable {
 
     public int attribute;
     public TYPE type;
     public Object value;
-    // Not used - left for legacy
-    public float quantile;
+
     public RNode parent;
     public RNode leftChild;
     public RNode rightChild;
     public Bucket bucket;
-    Map<Integer, BucketInfo> rangesByAttribute = new HashMap<Integer, BucketInfo>();
 
     public RNode() {
 
@@ -38,7 +37,6 @@ public class RNode {
         r.attribute = this.attribute;
         r.type = this.type;
         r.value = this.value;
-        r.quantile = this.quantile;
         r.parent = this.parent;
         r.leftChild = this.leftChild;
         r.rightChild = this.rightChild;
@@ -262,34 +260,11 @@ public class RNode {
             this.value = TypeUtils.deserializeValue(this.type, sc.nextLine()
                     .trim());
 
-            boolean exists = this.rangesByAttribute.containsKey(this.attribute);
-
             this.leftChild = new RNode();
             this.leftChild.parent = this;
 
             this.rightChild = new RNode();
             this.rightChild.parent = this;
-
-            for (Map.Entry<Integer, BucketInfo> entry : this.rangesByAttribute
-                    .entrySet()) {
-                this.leftChild.rangesByAttribute.put(entry.getKey(), entry
-                        .getValue().clone());
-                this.rightChild.rangesByAttribute.put(entry.getKey(), entry
-                        .getValue().clone());
-            }
-            this.rangesByAttribute = null;
-
-            if (exists) {
-                this.leftChild.rangesByAttribute.get(this.attribute).intersect(
-                        new BucketInfo(this.type, null, this.value));
-                this.rightChild.rangesByAttribute.get(this.attribute)
-                        .intersect(new BucketInfo(this.type, this.value, null));
-            } else {
-                this.leftChild.rangesByAttribute.put(this.attribute,
-                        new BucketInfo(this.type, null, this.value));
-                this.rightChild.rangesByAttribute.put(this.attribute,
-                        new BucketInfo(this.type, this.value, null));
-            }
 
             this.leftChild.parseNode(sc);
             this.rightChild.parseNode(sc);
@@ -297,9 +272,6 @@ public class RNode {
         } else if (type.equals("b")) {
             Bucket b = new Bucket(sc.nextInt());
             this.bucket = b;
-            for (BucketInfo info : this.rangesByAttribute.values()) {
-                info.setId(b.getBucketId());
-            }
         } else {
             System.out.println("Bad things have happened in unmarshall");
             System.out.println(type);

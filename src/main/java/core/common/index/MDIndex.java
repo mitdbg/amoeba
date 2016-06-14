@@ -5,12 +5,13 @@ import core.common.key.RawIndexKey;
 import core.utils.Range;
 import core.utils.TypeUtils;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 /**
  * An API for implementing multi-dimensional index, e.g. R-Tree, K-d Tree, etc.
  */
-public interface MDIndex {
+public interface MDIndex extends Serializable {
 
     public MDIndex clone() throws CloneNotSupportedException;
 
@@ -75,7 +76,7 @@ public interface MDIndex {
      * @param key
      * @return
      */
-    public Object getBucketId(RawIndexKey key);
+    public Integer getBucketId(RawIndexKey key);
 
     /**
      * Serialize the index into a byte array.
@@ -94,7 +95,7 @@ public interface MDIndex {
     /*
      * Placeholder class for the index leaves.
      */
-    final class Bucket {
+    final class Bucket implements Serializable {
         public static int maxBucketId = 0;
         private static HashMap<Integer, Double> counter = new HashMap<Integer, Double>();
         /* Actual Values */
@@ -152,7 +153,7 @@ public interface MDIndex {
     /**
      * Created by qui on 7/9/15.
      */
-    class BucketInfo extends Range {
+    class BucketInfo extends Range implements Serializable {
 
         private int id;
 

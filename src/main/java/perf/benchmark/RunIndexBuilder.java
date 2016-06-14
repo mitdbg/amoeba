@@ -9,6 +9,7 @@ import core.common.key.RawIndexKey;
 import core.upfront.build.HDFSPartitionWriter;
 import core.upfront.build.IndexBuilder;
 import core.upfront.build.PartitionWriter;
+import core.upfront.build.SparkDataUploader;
 import core.utils.ConfUtils;
 import core.utils.CuratorUtils;
 import core.utils.HDFSUtils;
@@ -84,7 +85,11 @@ public class RunIndexBuilder {
                 t.buildJoinRobustTreeFromSamples();
                 break;
             case 4:
-                t.writePartitionsFromIndex();
+                if (t.inputsDir.startsWith("hdfs:")) {
+                    t.uploadFromHDFS();
+                } else {
+                    t.writePartitionsFromIndex();
+                }
                 break;
             case 5:
                 System.out.println("Memory Stats (F/T/M): "
@@ -362,6 +367,27 @@ public class RunIndexBuilder {
                 getHDFSWriter(
                         cfg.getHDFS_WORKING_DIR() + "/" + tableName + dataDir,
                         cfg.getHDFS_REPLICATION_FACTOR()));
+
+        long endTime = System.currentTimeMillis();
+        System.out.println("Time Taken: " + (endTime - startTime) + "ms");
+    }
+
+    public void uploadFromHDFS() {
+        long startTime = System.currentTimeMillis();
+        FileSystem fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
+        byte[] indexBytes = HDFSUtils.readFile(fs, tableHDFSDir + "/index");
+
+        // Just load the index. For this we don't need to load the samples.
+        RobustTree index = new RobustTree(tableInfo);
+        index.unmarshall(indexBytes);
+
+        SparkDataUploader.buildDistributedFromIndex(
+                index,
+                key,
+                inputsDir,
+                tableHDFSDir,
+                cfg
+        );
 
         long endTime = System.currentTimeMillis();
         System.out.println("Time Taken: " + (endTime - startTime) + "ms");

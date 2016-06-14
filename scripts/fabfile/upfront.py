@@ -141,6 +141,19 @@ def write_partitions():
         cmd = fill_cmd(cmd)
         run(cmd)
 
+@roles('master')
+def write_partitions_spark():
+    cmd = '$SPARKSUBMIT --class perf.benchmark.RunIndexBuilder --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+        ' --conf $CONF' + \
+        ' --tableName $TABLENAME' + \
+        ' --inputsDir $INPUTSDIR' + \
+        ' --method 4 ' + \
+        ' --numReplicas 1' + \
+        ' --numBuckets $NUMBUCKETS' + \
+        ' > ~/logs/write_partitions.log'
+    cmd = fill_cmd(cmd)
+    run(cmd)
+
 @parallel
 def write_join_partitions():
     with cd(env.conf['HADOOPBIN']):
@@ -177,39 +190,35 @@ def check_max_memory():
 
 @roles('master')
 def upfront_full_scan_tpch_queries():
-    with cd(env.conf['HADOOPBIN']):
-        cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
-            ' --adapt false' + \
-            ' --conf $CONF' + \
-            ' --method 3 > ~/logs/full_scan_upfront.log'
-        cmd = fill_cmd(cmd)
-        run(cmd)
+    cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+        ' --adapt false' + \
+        ' --conf $CONF' + \
+        ' --method 3 > ~/logs/full_scan_upfront.log'
+    cmd = fill_cmd(cmd)
+    run(cmd)
 
 @roles('master')
 def upfront_tree_tpch_queries():
-    with cd(env.conf['HADOOPBIN']):
-        cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
-            ' --adapt false' + \
-            ' --conf $CONF' + \
-            ' --method 4 > ~/logs/$TABLENAME_tree_upfront.log'
-        cmd = fill_cmd(cmd)
-        run(cmd)
+    cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+        ' --adapt false' + \
+        ' --conf $CONF' + \
+        ' --method 4 > ~/logs/$TABLENAME_tree_upfront.log'
+    cmd = fill_cmd(cmd)
+    run(cmd)
 
 @roles('master')
 def upfront_spark_tpch_queries():
-    with cd(env.conf['HADOOPBIN']):
-        cmd = '$SPARKSUBMIT --class perf.benchmark.upfront.SparkUpfront --deploy-mode client --master spark://localhost:7077 $JAR ' + \
-            ' --conf $CONF' + \
-            ' > ~/logs/spark_upfront.log'
-        cmd = fill_cmd(cmd)
-        run(cmd)
+    cmd = '$SPARKSUBMIT --class perf.benchmark.upfront.SparkUpfront --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+        ' --conf $CONF' + \
+        ' > ~/logs/spark_upfront.log'
+    cmd = fill_cmd(cmd)
+    run(cmd)
 
 @roles('master')
 def print_unique_tpch_queries():
-    with cd(env.conf['HADOOPBIN']):
-        cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
-            ' --conf $CONF' + \
-            ' --method 5 > ~/logs/tpch_unique_queries.log'
-        cmd = fill_cmd(cmd)
-        run(cmd)
+    cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+        ' --conf $CONF' + \
+        ' --method 5 > ~/logs/tpch_unique_queries.log'
+    cmd = fill_cmd(cmd)
+    run(cmd)
 
