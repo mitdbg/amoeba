@@ -1,4 +1,4 @@
-package perf.benchmark;
+package perf.tools;
 
 import core.adapt.Query;
 import core.adapt.spark.SparkQuery;

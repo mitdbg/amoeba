@@ -2,24 +2,10 @@ from fabric.api import run,put,cd,parallel,roles,serial,local,runs_once
 from env_setup import *
 
 @roles('master')
-def simulator_old():
-    global conf
-    with cd(env.conf['HADOOPBIN']):
-        cmd = './hadoop jar $JAR perf.benchmark.RunSimulator' + \
-            ' --conf $CONF' + \
-            ' --tableName $TABLENAME' + \
-            ' --mode 0' + \
-            ' --simName sim' + \
-            ' --queriesFile /Users/anil/Dev/repos/mdindex/scripts/queries.log' + \
-            ' > ~/logs/sim.log'
-        cmd = fill_cmd(cmd)
-        run(cmd)
-
-@roles('master')
 def simulator_adapt():
     global conf
     with cd(env.conf['HADOOPBIN']):
-        cmd = './hadoop jar $JAR perf.benchmark.RunSimulator' + \
+        cmd = './hadoop jar $JAR perf.tools.RunSimulator' + \
             ' --conf $CONF' + \
             ' --tableName $TABLENAME' + \
             ' --mode 1' + \
@@ -33,7 +19,7 @@ def simulator_adapt():
 def simulator_noadapt():
     global conf
     with cd(env.conf['HADOOPBIN']):
-        cmd = './hadoop jar $JAR perf.benchmark.RunSimulator' + \
+        cmd = './hadoop jar $JAR perf.tools.RunSimulator' + \
             ' --conf $CONF' + \
             ' --tableName $TABLENAME' + \
             ' --mode 2' + \

@@ -1,4 +1,4 @@
-package perf.benchmark.upfront;
+package perf.benchmark.TPCHBaselines;
 
 import core.adapt.Query;
 import core.utils.ConfUtils;
@@ -7,7 +7,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.SQLContext;
-import perf.benchmark.BenchmarkSettings;
+import perf.tools.BenchmarkSettings;
 import perf.benchmark.TPCHWorkload;
 
 /**

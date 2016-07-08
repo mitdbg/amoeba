@@ -22,7 +22,7 @@ def create_table_info():
     global conf
     with cd(env.conf['HADOOPBIN']):
         run('./hadoop fs -mkdir -p %s/%s' % (env.conf['HDFSDIR'], env.conf['TABLENAME']))
-        cmd = './hadoop jar $JAR perf.benchmark.CreateTableInfo' + \
+        cmd = './hadoop jar $JAR perf.tools.CreateTableInfo' + \
             ' --conf $CONF' + \
             ' --tableName $TABLENAME' + \
             ' --delimiter "$DELIMITER"' + \
@@ -38,7 +38,7 @@ def bulk_sample_gen():
     run('mkdir -p %s/logs' % env.conf['HOMEDIR'])
 
     with cd(env.conf['HADOOPBIN']):
-        cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder' + \
+        cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
             ' --conf $CONF' + \
             ' --tableName $TABLENAME' + \
             ' --inputsDir $INPUTSDIR' + \
@@ -54,7 +54,7 @@ def create_robust_tree():
     global conf
     print env.roledefs
     with cd(env.conf['HADOOPBIN']):
-        cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder' + \
+        cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
             ' --conf $CONF' + \
             ' --tableName $TABLENAME' + \
             ' --inputsDir $INPUTSDIR' + \
@@ -69,7 +69,7 @@ def create_kdtree():
     global conf
     print env.roledefs
     with cd(env.conf['HADOOPBIN']):
-        cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder' + \
+        cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
             ' --conf $CONF' + \
             ' --tableName $TABLENAME' + \
             ' --inputsDir $INPUTSDIR' + \
@@ -84,7 +84,7 @@ def create_range_tree():
     global conf
     print env.roledefs
     with cd(env.conf['HADOOPBIN']):
-        cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder' + \
+        cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
             ' --conf $CONF' + \
             ' --tableName $TABLENAME' + \
             ' --inputsDir $INPUTSDIR' + \
@@ -99,7 +99,7 @@ def create_hybrid_range_tree():
     global conf
     print env.roledefs
     with cd(env.conf['HADOOPBIN']):
-        cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder' + \
+        cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
             ' --conf $CONF' + \
             ' --tableName $TABLENAME' + \
             ' --inputsDir $INPUTSDIR' + \
@@ -110,11 +110,26 @@ def create_hybrid_range_tree():
         run(cmd)
 
 @roles('master')
+def create_custom_tree():
+    global conf
+    print env.roledefs
+    with cd(env.conf['HADOOPBIN']):
+        cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
+            ' --conf $CONF' + \
+            ' --tableName $TABLENAME' + \
+            ' --inputsDir $INPUTSDIR' + \
+            ' --method 11 ' + \
+            ' --numBuckets $NUMBUCKETS' + \
+            ' > ~/logs/create_tree.log'
+        cmd = fill_cmd(cmd)
+        run(cmd)
+
+@roles('master')
 def create_join_robust_tree():
     global conf
     print env.roledefs
     with cd(env.conf['HADOOPBIN']):
-        cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder' + \
+        cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
             ' --conf $CONF' + \
             ' --tableName $TABLENAME' + \
             ' --inputsDir $INPUTSDIR' + \
@@ -130,7 +145,7 @@ def create_join_robust_tree():
 @parallel
 def write_partitions():
     with cd(env.conf['HADOOPBIN']):
-        cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder' + \
+        cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
             ' --conf $CONF' + \
             ' --tableName $TABLENAME' + \
             ' --inputsDir $INPUTSDIR' + \
@@ -143,7 +158,7 @@ def write_partitions():
 
 @roles('master')
 def write_partitions_spark():
-    cmd = '$SPARKSUBMIT --class perf.benchmark.RunIndexBuilder --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+    cmd = '$SPARKSUBMIT --class perf.tools.RunIndexBuilder --deploy-mode client --master spark://localhost:7077 $JAR ' + \
         ' --conf $CONF' + \
         ' --tableName $TABLENAME' + \
         ' --inputsDir $INPUTSDIR' + \
@@ -157,7 +172,7 @@ def write_partitions_spark():
 @parallel
 def write_join_partitions():
     with cd(env.conf['HADOOPBIN']):
-        cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder' + \
+        cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
             ' --conf $CONF' + \
             ' --tableName $TABLENAME' + \
             ' --inputsDir $INPUTSDIR' + \
@@ -178,7 +193,7 @@ def delete_partitions():
 @parallel
 def check_max_memory():
     with cd(env.conf['HADOOPBIN']):
-        cmd = './hadoop jar $JAR perf.benchmark.RunIndexBuilder ' + \
+        cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder ' + \
             ' --conf $CONF' + \
             ' --method 5 '
         cmd = fill_cmd(cmd)
@@ -189,36 +204,10 @@ def check_max_memory():
 ############
 
 @roles('master')
-def upfront_full_scan_tpch_queries():
-    cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
-        ' --adapt false' + \
-        ' --conf $CONF' + \
-        ' --method 3 > ~/logs/full_scan_upfront.log'
-    cmd = fill_cmd(cmd)
-    run(cmd)
-
-@roles('master')
-def upfront_tree_tpch_queries():
-    cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
-        ' --adapt false' + \
-        ' --conf $CONF' + \
-        ' --method 4 > ~/logs/$TABLENAME_tree_upfront.log'
-    cmd = fill_cmd(cmd)
-    run(cmd)
-
-@roles('master')
 def upfront_spark_tpch_queries():
-    cmd = '$SPARKSUBMIT --class perf.benchmark.upfront.SparkUpfront --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+    cmd = '$SPARKSUBMIT --class perf.benchmark.baselines.SparkUpfront --deploy-mode client --master spark://localhost:7077 $JAR ' + \
         ' --conf $CONF' + \
         ' > ~/logs/spark_upfront.log'
-    cmd = fill_cmd(cmd)
-    run(cmd)
-
-@roles('master')
-def print_unique_tpch_queries():
-    cmd = '$SPARKSUBMIT --class perf.benchmark.TPCHWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
-        ' --conf $CONF' + \
-        ' --method 5 > ~/logs/tpch_unique_queries.log'
     cmd = fill_cmd(cmd)
     run(cmd)
 

@@ -11,9 +11,22 @@ import core.utils.HDFSUtils;
 import core.utils.TypeUtils.SimpleDate;
 import core.utils.TypeUtils.TYPE;
 import org.apache.hadoop.fs.FileSystem;
+import perf.tools.BenchmarkSettings;
 
 import java.util.*;
 
+/***
+ * Generates the TPC-H Workload for Amoeba.
+ * Currently it generates:
+ * 1) Only queries 3,5,6,8,10,12,14,19
+ * 2) Predicated scan. We use the shell to run a COUNT aggregation on top.
+ *
+ * Call main with: --method m --numQueries n
+ * m == 1 : Generates a random workload of the above queries
+ * m == 2 : Generates one query of each template
+ *
+ * When m == 1; n is used to indicate the number of queries to generate.
+ */
 public class TPCHWorkload {
     public ConfUtils cfg;
     public int[] supportedQueries = new int[]{3, 5, 6, 8, 10, 12, 14, 19};
@@ -22,8 +35,6 @@ public class TPCHWorkload {
     Random rand;
     String tableName;
     TableInfo tableInfo;
-    SparkQuery sq;
-    boolean adapt = true;
 
     public static void main(String[] args) {
         BenchmarkSettings.loadSettings(args);
@@ -34,31 +45,13 @@ public class TPCHWorkload {
         t.setUp();
 
         switch (t.method) {
-            // Run Workload
-            case 1:
-                System.out.println("Memory Stats (F/T/M): "
-                        + Runtime.getRuntime().freeMemory() + " "
-                        + Runtime.getRuntime().totalMemory() + " "
-                        + Runtime.getRuntime().maxMemory());
-
-                System.out.println("Num Queries: " + t.numQueries);
-                t.runWorkload(t.numQueries);
-                break;
             // Print Workload
-            case 2:
+            case 1:
                 System.out.println("Num Queries: " + t.numQueries);
                 t.printWorkload(t.numQueries);
                 break;
-            // Run each query 1 at a time, full scan
-            case 3:
-                t.runUniqueWorkload(false);
-                break;
-            // Run each query 1 at a time, using the tree
-            case 4:
-                t.runUniqueWorkload(true);
-                break;
             // Print Unique Workload
-            case 5:
+            case 2:
                 t.printUniqueWorkload();
                 break;
             default:
@@ -80,10 +73,6 @@ public class TPCHWorkload {
         Globals.loadTableInfo(tableName, cfg.getHDFS_WORKING_DIR(), fs);
         tableInfo = Globals.getTableInfo(tableName);
         assert tableInfo != null;
-
-        // Cleanup queries file - to remove past query workload.
-        HDFSUtils.deleteFile(HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME()),
-                cfg.getHDFS_WORKING_DIR() + "/" + tableName + "/queries", false);
     }
 
     public Query createQuery(Predicate[] predicates) {
@@ -236,16 +225,6 @@ public class TPCHWorkload {
         }
     }
 
-    public long runQuery(Query q) {
-        if (sq == null)
-            sq = new SparkQuery(cfg);
-
-        if (adapt)
-            return sq.createAdaptRDD(cfg.getHDFS_WORKING_DIR(), q).count();
-        else
-            return sq.createNoAdaptRDD(cfg.getHDFS_WORKING_DIR(), q).count();
-    }
-
     public List<Query> generateWorkload(int numQueries) {
         ArrayList<Query> queries = new ArrayList<Query>();
 
@@ -256,40 +235,6 @@ public class TPCHWorkload {
         }
 
         return queries;
-    }
-
-    public void runWorkload(int numQueries) {
-        System.out.println("INFO: Workload " + numQueries + " queries");
-
-        for (int i = 0; i < numQueries; i++) {
-            int qNo = supportedQueries[rand.nextInt(supportedQueries.length)];
-            Query q = getQuery(19);
-            System.out.println("INFO: Query:" + q.toString());
-            long start = System.currentTimeMillis();
-            long result = runQuery(q);
-            long end = System.currentTimeMillis();
-            System.out.println("RES: Query: " + qNo + ";Time Taken: " + (end - start) +
-                    "; Result: " + result);
-        }
-    }
-
-    public void runUniqueWorkload(boolean useTree) {
-        if (sq == null)
-            sq = new SparkQuery(cfg);
-
-        for (int i = 0; i < supportedQueries.length; i++) {
-            Query q = getQuery(supportedQueries[i]);
-            long result;
-            long start = System.currentTimeMillis();
-            if (useTree) {
-                result = sq.createNoAdaptRDD(cfg.getHDFS_WORKING_DIR(), q).count();
-            } else {
-                result = sq.createScanRDD(cfg.getHDFS_WORKING_DIR(), q).count();
-            }
-            long end = System.currentTimeMillis();
-            System.out.println("RES: Query: " + supportedQueries[i] + ";Time Taken: " + (end - start) +
-                    "; Result: " + result);
-        }
     }
 
     public void printWorkload(int numQueries) {
@@ -310,10 +255,6 @@ public class TPCHWorkload {
         int counter = 0;
         while (counter < args.length) {
             switch (args[counter]) {
-                case "--adapt":
-                    adapt = Boolean.parseBoolean(args[counter + 1]);
-                    counter += 2;
-                    break;
                 case "--method":
                     method = Integer.parseInt(args[counter + 1]);
                     counter += 2;

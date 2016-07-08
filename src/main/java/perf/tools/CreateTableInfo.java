@@ -1,4 +1,4 @@
-package perf.benchmark;
+package perf.tools;
 
 import core.common.globals.Globals;
 import core.common.globals.Schema;
@@ -7,7 +7,13 @@ import core.utils.ConfUtils;
 import core.utils.HDFSUtils;
 
 /**
- * Created by anil on 12/11/15.
+ * Used to create a table in Amoeba.
+ * Creates the table directory and initializes the tableInfo file.
+ * Takes the following arguments:
+ * --tableName : Table name
+ * --numTuples : Number of tuples in the table
+ * --delimiter : delimiter in the raw data
+ * --schema : Schema of the table
  */
 public class CreateTableInfo {
     double numTuples = -1;
@@ -15,9 +21,6 @@ public class CreateTableInfo {
     Schema schema = null;
     String tableName = "";
 
-    /**
-     * Used to create a table.
-     */
     public static void main(String[] args) {
         BenchmarkSettings.loadSettings(args);
         CreateTableInfo cti = new CreateTableInfo();

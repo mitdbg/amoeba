@@ -1,4 +1,4 @@
-package perf.benchmark;
+package perf.tools;
 
 public class BenchmarkSettings {
     public static String conf;

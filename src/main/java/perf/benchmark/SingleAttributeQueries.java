@@ -10,6 +10,7 @@ import core.utils.TypeUtils.SimpleDate;
 import core.utils.TypeUtils.TYPE;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.spark.api.java.JavaPairRDD;
+import perf.tools.BenchmarkSettings;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;

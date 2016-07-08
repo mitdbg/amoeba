@@ -1,4 +1,4 @@
-package perf.benchmark;
+package perf.tools;
 
 import core.common.globals.Globals;
 import core.common.globals.TableInfo;
@@ -18,9 +18,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
-import perf.benchmark.baselines.KDTree;
-import perf.benchmark.baselines.Range2Tree;
-import perf.benchmark.baselines.RangeTree;
+import perf.benchmark.TPCHBaselines.KDTree;
+import perf.benchmark.TPCHBaselines.Range2Tree;
+import perf.benchmark.TPCHBaselines.RangeTree;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,14 +30,11 @@ import java.io.OutputStream;
  * Builds the index. Captures time taken by the different steps in index
  * building.
  * Make sure that the table info has been created.
- * TODO: Compute sampling fraction instead of taking as an option.
  *
  * @author anil
  */
 public class RunIndexBuilder {
     RawIndexKey key;
-
-    ;
     IndexBuilder builder;
     int partitionBufferSize;
     ConfUtils cfg;

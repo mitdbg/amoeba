@@ -1,4 +1,4 @@
-package perf.benchmark.baselines;
+package perf.benchmark.TPCHBaselines;
 
 import core.common.globals.TableInfo;
 import core.common.index.RNode;

@@ -2,6 +2,7 @@ package perf.benchmark;
 
 import core.utils.ConfUtils;
 import core.utils.HDFSUtils;
+import perf.tools.BenchmarkSettings;
 
 public class ChangingWorkload {
     final static String[] shipModes = new String[]{"REG AIR", "AIR", "RAIL",

@@ -1,4 +1,4 @@
-package perf.benchmark.baselines;
+package perf.benchmark.TPCHBaselines;
 
 import core.common.globals.TableInfo;
 import core.common.index.MDIndex;
@@ -10,24 +10,11 @@ import core.utils.Pair;
 import java.util.LinkedList;
 
 /**
- * Implements a KD-Tree. With no workload information, each
- * level is assigned a random attribute.
+ * Created by anil on 5/23/16.
  */
-public class Range2Tree extends RobustTree {
-    public Range2Tree(TableInfo ti) {
+public class RangeTree extends RobustTree {
+    public RangeTree(TableInfo ti) {
         super(ti);
-    }
-
-    public int getAttrForLevel(int level) {
-        if (level < 6) {
-            return tableInfo.schema.getAttributeId("o_orderdate");
-        } else if (level < 8) {
-            return tableInfo.schema.getAttributeId("c_region");
-        } else if (level < 10) {
-            return tableInfo.schema.getAttributeId("c_mktsegment");
-        } else {
-            return tableInfo.schema.getAttributeId("l_quantity");
-        }
     }
 
     @Override
@@ -39,18 +26,19 @@ public class Range2Tree extends RobustTree {
         // Assumes number of levels less than number of attributes.
 
         // Initialize root with attribute 0
-        LinkedList<RobustTree.Task> nodeQueue = new LinkedList<Task>();
+        LinkedList<RobustTree.Task> nodeQueue = new LinkedList<RobustTree.Task>();
         RobustTree.Task initialTask = new RobustTree.Task();
         initialTask.node = root;
         initialTask.sample = this.sample;
         initialTask.depth = 0;
         nodeQueue.add(initialTask);
 
+        int orderdate_dim = tableInfo.schema.getAttributeId("o_orderdate");
         while (nodeQueue.size() > 0) {
             RobustTree.Task t = nodeQueue.pollFirst();
             if (t.depth < maxDepth) {
                 Pair<ParsedTupleList, ParsedTupleList> halves = null;
-                int dim = getAttrForLevel(t.depth);
+                int dim = orderdate_dim;
                 halves = t.sample.sortAndSplit(dim);
 
                 if (halves.first.size() == 0 ||

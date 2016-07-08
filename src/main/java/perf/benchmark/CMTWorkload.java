@@ -3,7 +3,6 @@ package perf.benchmark;
 import core.adapt.Predicate;
 import core.adapt.Predicate.PREDTYPE;
 import core.adapt.Query;
-import core.adapt.spark.SparkQuery;
 import core.common.globals.Globals;
 import core.common.globals.TableInfo;
 import core.utils.ConfUtils;
@@ -11,18 +10,19 @@ import core.utils.HDFSUtils;
 import core.utils.TypeUtils;
 import core.utils.TypeUtils.TYPE;
 import org.apache.hadoop.fs.FileSystem;
+import perf.tools.BenchmarkSettings;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Generates a workload based on query workload from CMT.
+ * Reads the query workload from /user/amoeba/cmt_queries.log
+ * on HDFS.
+ * Each query is translated and printed as a predicated scan query.
+ */
 public class CMTWorkload {
     public ConfUtils cfg;
-
-    public String schemaString;
-
-    int numFields;
-
-    int method;
 
     String tableName;
 
@@ -33,19 +33,9 @@ public class CMTWorkload {
         BenchmarkSettings.printSettings();
 
         CMTWorkload t = new CMTWorkload();
-        t.loadSettings(args);
         t.setUp();
 
-        switch (t.method) {
-            case 1:
-                t.runWorkload();
-                break;
-            case 2:
-                t.testWorkload();
-                break;
-            default:
-                break;
-        }
+        t.printWorkload();
     }
 
     public void setUp() {
@@ -100,7 +90,7 @@ public class CMTWorkload {
     public List<Query> generateWorkload() {
         byte[] stringBytes = HDFSUtils.readFile(
                 HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME()),
-                "/user/mdindex/cmt_queries.log");
+                "/user/amoeba/cmt_queries.log");
         String queriesString = new String(stringBytes);
         String[] queries = queriesString.split("\n");
         List<Query> ret = new ArrayList<Query>();
@@ -121,54 +111,10 @@ public class CMTWorkload {
         return ret;
     }
 
-    public void testWorkload() {
-        long start, end;
-        SparkQuery sq = new SparkQuery(cfg);
+    public void printWorkload() {
         List<Query> queries = generateWorkload();
         for (Query q : queries) {
-            System.out.println("INFO: Query:" + q.toString());
-        }
-    }
-
-    public void runWorkload() {
-        long start, end;
-        SparkQuery sq = new SparkQuery(cfg);
-        List<Query> queries = generateWorkload();
-        for (Query q : queries) {
-            System.out.println("INFO: Query:" + q.toString());
-        }
-
-        for (Query q : queries) {
-            start = System.currentTimeMillis();
-            long result = sq.createAdaptRDD(cfg.getHDFS_WORKING_DIR(),
-                    q).count();
-            end = System.currentTimeMillis();
-            System.out.println("RES: Time Taken: " + (end - start) +
-                    "; Result: " + result);
-        }
-    }
-
-    public void loadSettings(String[] args) {
-        int counter = 0;
-        while (counter < args.length) {
-            switch (args[counter]) {
-                case "--schema":
-                    schemaString = args[counter + 1];
-                    counter += 2;
-                    break;
-                case "--numFields":
-                    numFields = Integer.parseInt(args[counter + 1]);
-                    counter += 2;
-                    break;
-                case "--method":
-                    method = Integer.parseInt(args[counter + 1]);
-                    counter += 2;
-                    break;
-                default:
-                    // Something we don't use
-                    counter += 2;
-                    break;
-            }
+            System.out.println(q.toString());
         }
     }
 }
