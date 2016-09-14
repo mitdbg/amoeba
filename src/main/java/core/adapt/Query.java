@@ -42,6 +42,19 @@ public class Query implements Serializable {
         this.predicates = predicates;
     }
 
+    public static Query getQueryFromFormattedString(TableInfo table, String queryString) {
+        String predString = queryString.trim();
+        String[] predParts = predString.split(";");
+        Predicate[] predicates = new Predicate[predParts.length];
+        for (int i = 0; i < predParts.length; i++) {
+            predicates[i] = Predicate.getPredicateFromFormattedString(table, predParts[i]);
+        }
+
+        Query q = new Query(table.tableName, predicates);
+        q.normalizeQuery();
+        return q;
+    }
+
     /**
      * The partitioning tree with node A_p splits data as
      * A <= p and A > p. Things become simpler if predicates are also

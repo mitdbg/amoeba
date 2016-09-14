@@ -56,7 +56,7 @@ public class RobustTree implements MDIndex {
 
     public static void printNode(RNode node) {
         if (node.bucket != null) {
-            System.out.format("B");
+            System.out.format("B " + node.bucket.bucketId);
         } else {
             System.out.format("Node: %d %s { ", node.attribute,
                     node.value.toString());
@@ -211,17 +211,17 @@ public class RobustTree implements MDIndex {
 
     public int getLeastAllocated(double[] allocations) {
         int numAttributes = allocations.length;
-        if (countCalled < 2) {
-            countCalled++;
-            if (countCalled == 0) {
-                return tableInfo.schema.getAttributeId("o_orderdate"); // o_orderdate
-            } else if (countCalled == 1) {
-                return tableInfo.schema.getAttributeId("l_shipmode"); // l_shipmode
-            } else if (countCalled == 2) {
-                return tableInfo.schema.getAttributeId("l_shipmode"); // l_shipmode
-            }
-            // Could be useful to add quantity
-        }
+//        if (countCalled < 2) {
+//            countCalled++;
+//            if (countCalled == 0) {
+//                return tableInfo.schema.getAttributeId("o_orderdate"); // o_orderdate
+//            } else if (countCalled == 1) {
+//                return tableInfo.schema.getAttributeId("l_shipmode"); // l_shipmode
+//            } else if (countCalled == 2) {
+//                return tableInfo.schema.getAttributeId("l_shipmode"); // l_shipmode
+//            }
+//            // Could be useful to add quantity
+//        }
 
         leastAllocated.clear();
         leastAllocated.add(0);
@@ -253,23 +253,8 @@ public class RobustTree implements MDIndex {
         return root.getBucketId(key);
     }
 
-    private void getAllBucketsHelper(RNode node, ArrayList<Integer> ids) {
-        if (node.bucket != null) {
-            ids.add(node.bucket.getBucketId());
-            return;
-        }
-        getAllBucketsHelper(node.leftChild, ids);
-        getAllBucketsHelper(node.rightChild, ids);
-    }
-
-    public int[] getAllBuckets() {
-        ArrayList<Integer> ids = new ArrayList<Integer>();
-        getAllBucketsHelper(root, ids);
-        int[] buckets = new int[ids.size()];
-        for (int i = 0; i < buckets.length; i++) {
-            buckets[i] = ids.get(i);
-        }
-        return buckets;
+    public int[] getAllBucketIds() {
+       return root.getAllBucketIds();
     }
 
     /***************************************************
@@ -320,6 +305,9 @@ public class RobustTree implements MDIndex {
             this.dimensionTypes[i] = TYPE.valueOf(sc.next());
         }
 
+        // Reset the maxBucketId.
+        Bucket.maxBucketId = 0;
+
         this.root = new RNode();
         this.root.parseNode(sc);
     }
@@ -365,7 +353,7 @@ public class RobustTree implements MDIndex {
     }
 
     public double[] getAllocations() {
-        List<RNode> queue = new ArrayList<RNode>();
+        List<RNode> queue = new LinkedList<RNode>();
         Map<Integer, Double> allocs = new HashMap<Integer, Double>();
         queue.add(this.getRoot());
 

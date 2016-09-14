@@ -5,9 +5,9 @@ import core.utils.HDFSUtils;
 import junit.framework.TestCase;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import perf.benchmark.BenchmarkSettings;
-import perf.benchmark.CreateTableInfo;
-import perf.benchmark.RunIndexBuilder;
+import perf.tools.BenchmarkSettings;
+import perf.tools.CreateTableInfo;
+import perf.tools.RunIndexBuilder;
 
 import java.io.IOException;
 import java.util.List;

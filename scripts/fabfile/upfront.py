@@ -169,6 +169,13 @@ def write_partitions_spark():
     cmd = fill_cmd(cmd)
     run(cmd)
 
+@runs_once
+def load_dataset():
+  create_table_info()
+  bulk_sample_gen()
+  create_robust_tree()
+  write_partitions()
+
 @parallel
 def write_join_partitions():
     with cd(env.conf['HADOOPBIN']):

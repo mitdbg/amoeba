@@ -1,12 +1,16 @@
 package perf.tools;
 
 import core.adapt.Query;
+import core.common.globals.Globals;
+import core.common.globals.TableInfo;
 import core.simulator.Simulator;
 import core.utils.ConfUtils;
+import core.utils.HDFSUtils;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.hadoop.fs.FileSystem;
 
 /**
  * Utility used to run the simulator.
@@ -57,6 +61,10 @@ public class RunSimulator {
                     mode = Integer.parseInt(args[counter + 1]);
                     counter += 2;
                     break;
+                case "--c":
+                    Globals.c = Double.parseDouble(args[counter + 1]);
+                    counter += 2;
+                    break;
                 default:
                     // Something we don't use
                     counter += 2;
@@ -69,6 +77,10 @@ public class RunSimulator {
         cfg = new ConfUtils(BenchmarkSettings.conf);
         List<Query> list = new ArrayList<>();
 
+        FileSystem fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
+        Globals.loadTableInfo(tableName, cfg.getHDFS_WORKING_DIR(), fs);
+        TableInfo tableInfo = Globals.getTableInfo(tableName);
+
         File file = new File(queriesFile);
         BufferedReader reader = null;
 
@@ -77,7 +89,11 @@ public class RunSimulator {
             String text;
 
             while ((text = reader.readLine()) != null) {
-                list.add(new Query(text));
+                if (mode == 1) {
+                    list.add(new Query(text));
+                } else if (mode == 3) {
+                    list.add(Query.getQueryFromFormattedString(tableInfo, text));
+                }
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -102,9 +118,7 @@ public class RunSimulator {
         Simulator sim = new Simulator();
         sim.setUp(cfg, simName, tableName, queries);
 
-        if (mode == 0) {
-            sim.runOld();
-        } else if (mode == 1) {
+        if (mode == 1 || mode == 3) {
             sim.runAdapt();
         } else if (mode == 2) {
             sim.runNoAdapt();

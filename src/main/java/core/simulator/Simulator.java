@@ -55,24 +55,6 @@ public class Simulator {
         opt.loadIndex(Globals.getTableInfo(simName));
     }
 
-    public void runOld() {
-        for (int i = 0; i < queries.length; i++) {
-            Query q = queries[i];
-            q.setTable(simName);
-            PartitionSplit[] splits = opt.buildPlan(q);
-
-            // Check if there was an index update. If yes, we need
-            // to reload the index.
-            for (PartitionSplit p : splits) {
-                if (p.getIterator().getClass() == RepartitionIterator.class) {
-                    System.out.println("INFO: Reloading index ..");
-                    opt.loadIndex(Globals.getTableInfo(simName));
-                    break;
-                }
-            }
-        }
-    }
-
     /**
      * Runs the queries against the partitioning tree.
      * Does not use the adaptive executor.
@@ -87,9 +69,13 @@ public class Simulator {
 
     /**
      * Runs the queries against the partitioning tree.
-     * Does not use the adaptive executor.
+     * Uses the adaptive executor.
      */
     public void runAdapt() {
+        System.out.print("INFO: Initial Tree ");
+        opt.getIndex().printTree();
+        System.out.println();
+
         for (int i = 0; i < queries.length; i++) {
             Query q = queries[i];
             q.setTable(simName);
@@ -99,5 +85,9 @@ public class Simulator {
             // We need to reload for every query.
             opt.loadIndex(Globals.getTableInfo(simName));
         }
+
+        System.out.print("INFO: Final Tree ");
+        opt.getIndex().printTree();
+        System.out.println();
     }
 }

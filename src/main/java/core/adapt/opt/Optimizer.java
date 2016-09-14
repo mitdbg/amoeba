@@ -33,8 +33,6 @@ import java.util.*;
  * @author anil
  */
 public class Optimizer {
-    private static final double WRITE_MULTIPLIER = 1.5;
-
     private RobustTree rt;
 
     // Properties extracted from ConfUtils
@@ -214,6 +212,12 @@ public class Optimizer {
 
         double benefit = 0;
         List<RNode> buckets = rt.getMatchingBuckets(ps);
+        int[] bucketIds = new int[buckets.size()];
+        double[] bucketTupleCounts = new double[buckets.size()];
+        for (int i = 0; i<buckets.size(); i++) {
+            bucketIds[i] = buckets.get(i).bucket.getBucketId();
+            bucketTupleCounts[i] = buckets.get(i).bucket.getEstimatedNumTuples();
+        }
 
         // Till we get no better plan, try to add a predicate into the tree.
         List<Predicate> predicatesInserted = new ArrayList<>();
@@ -234,29 +238,29 @@ public class Optimizer {
             }
         }
 
-        List<RNode> newBuckets = rt.getMatchingBuckets(ps);
+        int[] newBuckets = rt.getAllBucketIds();
         double cost = 0;
         double tcost = 0;
         List<Integer> modifiedBuckets = new ArrayList<>();
         List<Integer> unmodifiedBuckets = new ArrayList<>();
 
         // TODO: Maybe just sort ?
-        for (RNode r : buckets) {
+        for (int i=0; i < bucketIds.length; i++) {
             boolean found = false;
-            for (RNode s : newBuckets) {
-                if (s.bucket.getBucketId() == r.bucket.getBucketId()) {
+            for (int s : newBuckets) {
+                if (s == bucketIds[i]) {
                     found = true;
                     break;
                 }
             }
 
             if (found) {
-                unmodifiedBuckets.add(r.bucket.getBucketId());
-                tcost += r.bucket.getEstimatedNumTuples();
+                unmodifiedBuckets.add(bucketIds[i]);
+                tcost += bucketTupleCounts[i];
             } else {
-                modifiedBuckets.add(r.bucket.getBucketId());
-                cost += Globals.c * r.bucket.getEstimatedNumTuples();
-                tcost += Globals.c * r.bucket.getEstimatedNumTuples();
+                modifiedBuckets.add(bucketIds[i]);
+                cost += Globals.c * bucketTupleCounts[i];
+                tcost += Globals.c * bucketTupleCounts[i];
             }
         }
 
@@ -441,6 +445,7 @@ public class Optimizer {
                 if (isRoot)
                     rt.setRoot(r);
 
+                updateBucketIds(r.getAllBuckets());
                 break;
             case 2:
                 Predicate p2 = a.pid;
@@ -1007,7 +1012,7 @@ public class Optimizer {
 
     private double computeCost(RNode r) {
         double numTuples = r.numTuplesInSubtree();
-        return WRITE_MULTIPLIER * numTuples;
+        return Globals.c * numTuples;
     }
 
     public void loadQueries() {

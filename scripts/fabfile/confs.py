@@ -35,6 +35,28 @@ SERVER1 = {
     }
 
 confs = {
+    "local_simple": {
+        'TYPE' : LOCAL,
+        'INPUTSDIR' : '/Users/anil/Dev/repos/amoeba/data/simple/',
+        'TABLENAME' : 'simple',
+        'SAMPLINGRATE' : '1',
+        'DELIMITER': '|',
+        'NUMBUCKETS' : '2',
+        'NUMTUPLES' : '1000',
+        'NUMFIELDS' : '2',
+        'SCHEMA': 'A int, B int',
+        },
+    "local_simple2": {
+        'TYPE' : LOCAL,
+        'INPUTSDIR' : '/Users/anil/Dev/repos/amoeba/data/simple/',
+        'TABLENAME' : 'simple2',
+        'SAMPLINGRATE' : '1',
+        'DELIMITER': '|',
+        'NUMBUCKETS' : '4',
+        'NUMTUPLES' : '1000',
+        'NUMFIELDS' : '2',
+        'SCHEMA': 'A int, B int',
+        },
     "local_lineitem" : {
         'TYPE' : LOCAL,
         'INPUTSDIR' : '/Users/anil/Dev/repos/tpch-dbgen/lineitem1/',

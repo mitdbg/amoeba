@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class Globals {
     // Re-partition cost multiplier.
-    static public final int c = 4;
+    static public double c = 4;
 
     // Query window size.
     static public final int window_size = 20;

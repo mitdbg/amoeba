@@ -36,6 +36,15 @@ public class Predicate {
         this.predtype = PREDTYPE.getPredType(tokens[3]);
     }
 
+    public static Predicate getPredicateFromFormattedString(TableInfo table, String predString) {
+        String[] tokens = predString.split(" ");
+        int attr = table.schema.getAttributeId(tokens[0]);
+        TYPE type = table.schema.getType(attr);
+        Object value = TypeUtils.deserializeValue(type, tokens[2]);
+        PREDTYPE predtype = PREDTYPE.getPredType(tokens[1]);
+        return new Predicate(attr, type, value, predtype);
+    }
+
     public void normalizePredicate() {
         if (this.predtype == PREDTYPE.GEQ) {
             this.predtype = PREDTYPE.GT;

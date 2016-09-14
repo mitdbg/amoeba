@@ -221,6 +221,42 @@ public class RNode implements Serializable {
         return total;
     }
 
+    public int[] getAllBucketIds() {
+        LinkedList<RNode> queue = new LinkedList<>();
+        ArrayList<Integer> ids = new ArrayList<Integer>();
+        queue.add(this);
+        while (!queue.isEmpty()) {
+            RNode r = queue.removeFirst();
+            if (r.bucket == null) {
+                queue.add(r.leftChild);
+                queue.add(r.rightChild);
+            } else {
+                ids.add(r.bucket.getBucketId());
+            }
+        }
+        int[] buckets = new int[ids.size()];
+        for (int i = 0; i < buckets.length; i++) {
+            buckets[i] = ids.get(i);
+        }
+        return buckets;
+    }
+
+    public List<RNode> getAllBuckets() {
+        LinkedList<RNode> queue = new LinkedList<>();
+        ArrayList<RNode> nodes = new ArrayList<>();
+        queue.add(this);
+        while (!queue.isEmpty()) {
+            RNode r = queue.removeFirst();
+            if (r.bucket == null) {
+                queue.add(r.leftChild);
+                queue.add(r.rightChild);
+            } else {
+                nodes.add(r);
+            }
+        }
+        return nodes;
+    }
+
     public String marshall() {
         String ret = "";
         LinkedList<RNode> stack = new LinkedList<RNode>();
@@ -252,6 +288,7 @@ public class RNode implements Serializable {
 
     public RNode parseNode(Scanner sc) {
         String type = sc.next();
+
         if (type.equals("n")) {
             this.attribute = sc.nextInt();
             this.type = TYPE.valueOf(sc.next());

@@ -1,0 +1,14 @@
+CREATE TEMPORARY TABLE tpch  
+	(l_linenumber int, l_quantity double, l_extendedprice double, l_discount double, l_tax double,
+	l_returnflag string,  l_linestatus string, l_shipdate string, l_commitdate string, l_receiptdate string,
+	l_shipinstruct string, l_shipmode string,
+  o_orderstatus string, o_totalprice double, o_orderdate string, o_orderpriority string, o_clerk string,
+  o_shippriority int,
+  p_name string, p_mfgr string, p_brand string,
+	p_type string, p_size int, p_container string, p_retailprice double
+  s_name string, s_address string,
+	s_phone string, s_acctbal double, s_nation string, s_region string
+  c_name string, c_address string,
+	c_phone string, c_acctbal double, c_mktsegment string , c_nation string, c_region string)
+USING com.databricks.spark.csv
+OPTIONS (path "$PATH/supplier.tbl.1,$PATH/supplier.tbl.2,$PATH/supplier.tbl.3,$PATH/supplier.tbl.4,$PATH/supplier.tbl.5,$PATH/supplier.tbl.6,$PATH/supplier.tbl.7,$PATH/supplier.tbl.8,$PATH/supplier.tbl.9,$PATH/supplier.tbl.10", header "false", delimiter "|")""")
