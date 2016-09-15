@@ -52,7 +52,10 @@ Linux / Mac OS X
   `write_partitions` write the dataset partitioned into HDFS
 
 * To run a bunch of queries
-  
-  `fab setup:local_simple run_queries`
+
+  ```
+  cp ../data/simple_queries.log ~/queries.log
+  fab setup:local_simple run_queries_formatted
+  ```
 
 The wiki contains additional information about setup and using Amoeba.
