@@ -36,14 +36,6 @@ public abstract class PartitionWriter implements Cloneable {
         return w;
     }
 
-    public String getPartitionDir() {
-        return this.partitionDir;
-    }
-
-    public void setPartitionDir(String partitionDir) {
-        this.partitionDir = partitionDir;
-    }
-
     public void writeToPartition(String partitionId, byte[] bytes,
                                  int b_offset, int b_length) {
         long start = System.nanoTime();

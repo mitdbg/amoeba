@@ -39,10 +39,7 @@ public class PostFilterIterator extends PartitionIterator implements
     @Override
     protected boolean isRelevant(IteratorRecord record) {
         // return query.qualifies(record);
-        if (query.qualifies(record)) {
-            return true;
-        }
-        return false;
+        return query.qualifies(record);
     }
 
     @Override

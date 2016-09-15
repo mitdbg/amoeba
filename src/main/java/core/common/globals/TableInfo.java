@@ -1,6 +1,5 @@
 package core.common.globals;
 
-import core.common.index.JoinRobustTree;
 import core.utils.HDFSUtils;
 import core.utils.TypeUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -79,32 +78,4 @@ public class TableInfo {
         }
     }
 
-    public void gc(String hdfsWorkingDir, FileSystem fs) {
-        String path = hdfsWorkingDir + "/" + tableName;
-        String pathToData = path + "/data";
-        String pathToIndex = path + "/index";
-        byte[] indexBytes = HDFSUtils.readFile(fs, pathToIndex);
-        JoinRobustTree rt = new JoinRobustTree(this);
-        rt.unmarshall(indexBytes);
-        int[] bids = rt.getAllBuckets();
-        HashSet<Integer> buckets = new HashSet<Integer>();
-        for (int i = 0; i < bids.length; i++) {
-            buckets.add(bids[i]);
-        }
-        try {
-            FileStatus[] existingFiles = fs.listStatus(new Path(pathToData));
-            for (int i = 0; i < existingFiles.length; i++) {
-                Path fp = existingFiles[i].getPath();
-                String fileName = FilenameUtils.getName(fp.toString());
-                int id = Integer.parseInt(fileName);
-                if (buckets.contains(id) == false) {
-                    System.out.println("[GC]: Deleting " + fp.toString());
-                    fs.delete(fp, false);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
 }

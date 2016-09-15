@@ -15,7 +15,6 @@ public class Partition implements Cloneable, Serializable {
     private static int V_MAX_INT = 1024 * 1024 * 50;
     protected String path;
 
-    ;
     protected byte[] bytes;
     protected int offset;
     protected int recordCount;
@@ -146,7 +145,7 @@ public class Partition implements Cloneable, Serializable {
         // this partition
     }
 
-    public static enum State {
+    public enum State {
         ORIG, NEW
     }
 }

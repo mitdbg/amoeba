@@ -396,16 +396,6 @@ public class RobustTree implements MDIndex {
         return allocArray;
     }
 
-    public static class Bound {
-        public double upper;
-        public double lower;
-
-        public Bound(double lower, double upper) {
-            this.upper = upper;
-            this.lower = lower;
-        }
-    }
-
     public class Task {
         public RNode node;
         public int depth;

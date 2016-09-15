@@ -51,4 +51,45 @@ def print_cmt_queries():
         cmd = fill_cmd(cmd)
         run(cmd)
 
+@roles('master')
+def run_queries(c='4'):
+    global conf
+    with cd(env.conf['HADOOPBIN']):
+        cmd = '$SPARKSUBMIT --class perf.tools.RunWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+            ' --conf $CONF' + \
+            ' --tableName $TABLENAME' + \
+            ' --mode 1' + \
+            ' --c %s' % c + \
+            ' --queriesFile ~/queries.log' + \
+            ' > ~/logs/run_queries.log'
+        cmd = fill_cmd(cmd)
+        run(cmd)
+
+@roles('master')
+def run_queries_noadapt(c='4'):
+    global conf
+    with cd(env.conf['HADOOPBIN']):
+        cmd = '$SPARKSUBMIT --class perf.tools.RunWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+            ' --conf $CONF' + \
+            ' --tableName $TABLENAME' + \
+            ' --mode 2' + \
+            ' --c %s' % c + \
+            ' --queriesFile ~/queries.log' + \
+            ' > ~/logs/run_queries.log'
+        cmd = fill_cmd(cmd)
+        run(cmd)
+
+@roles('master')
+def run_queries_formatted(c='4'):
+    global conf
+    with cd(env.conf['HADOOPBIN']):
+        cmd = '$SPARKSUBMIT --class perf.tools.RunWorkload --deploy-mode client --master spark://localhost:7077 $JAR ' + \
+            ' --conf $CONF' + \
+            ' --tableName $TABLENAME' + \
+            ' --mode 3' + \
+            ' --c %s' % c + \
+            ' --queriesFile ~/queries.log' + \
+            ' > ~/logs/run_queries.log'
+        cmd = fill_cmd(cmd)
+        run(cmd)
 

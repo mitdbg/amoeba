@@ -61,36 +61,11 @@ public class RNode implements Serializable {
                 return false;
 
             allGood = this.rightChild == r.rightChild;
-            if (!allGood)
-                return false;
+            return allGood;
 
-            return true;
         }
 
         return false;
-    }
-
-    public void setValues(int dimension, TYPE type, RawIndexKey key) {
-        this.attribute = dimension;
-        this.type = type;
-        this.value = getValue(dimension, type, key);
-    }
-
-    private Object getValue(int dimension, TYPE type, RawIndexKey key) {
-        switch (type) {
-            case INT:
-                return key.getIntAttribute(dimension);
-            case LONG:
-                return key.getLongAttribute(dimension);
-            case DOUBLE:
-                return key.getDoubleAttribute(dimension);
-            case DATE:
-                return key.getDateAttribute(dimension);
-            case STRING:
-                return key.getStringAttribute(dimension);
-            default:
-                throw new RuntimeException("Unknown dimension type: " + type);
-        }
     }
 
     private int compareKey(Object value, int dimension, TYPE type,
@@ -204,23 +179,6 @@ public class RNode implements Serializable {
         return total;
     }
 
-    public double getAll() {
-        LinkedList<RNode> stack = new LinkedList<RNode>();
-        stack.add(this);
-        double total = 0;
-        while (stack.size() > 0) {
-            RNode t = stack.removeLast();
-            if (t.bucket != null) {
-                total += t.bucket.getEstimatedNumTuples();
-            } else {
-                stack.add(t.rightChild);
-                stack.add(t.leftChild);
-            }
-        }
-
-        return total;
-    }
-
     public int[] getAllBucketIds() {
         LinkedList<RNode> queue = new LinkedList<>();
         ArrayList<Integer> ids = new ArrayList<Integer>();
@@ -277,13 +235,6 @@ public class RNode implements Serializable {
             ret += nStr;
         }
         return ret;
-    }
-
-    public void unmarshall(byte[] bytes) {
-        String tree = new String(bytes);
-        Scanner sc = new Scanner(tree);
-
-        this.parseNode(sc);
     }
 
     public RNode parseNode(Scanner sc) {

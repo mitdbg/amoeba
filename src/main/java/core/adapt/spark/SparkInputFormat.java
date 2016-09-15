@@ -42,7 +42,6 @@ public class SparkInputFormat extends
         List<InputSplit> finalSplits = new ArrayList<InputSplit>();
         queryConf = new SparkQueryConf(job.getConfiguration());
 
-
         AccessMethod am = new AccessMethod();
         am.init(queryConf);
 

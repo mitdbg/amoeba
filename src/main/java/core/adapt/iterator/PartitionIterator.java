@@ -22,7 +22,6 @@ public class PartitionIterator implements Iterator<IteratorRecord> {
 
     protected static char newLine = '\n';
 
-    ;
     protected IteratorRecord record;
     protected byte[] recordBytes;
     protected byte[] brokenRecordBytes;
@@ -161,9 +160,5 @@ public class PartitionIterator implements Iterator<IteratorRecord> {
     // }
 
     public void readFields(DataInput in) throws IOException {
-    }
-
-    public enum ITERATOR {
-        SCAN, FILTER, REPART
     }
 }

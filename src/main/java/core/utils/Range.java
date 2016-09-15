@@ -110,12 +110,10 @@ public class Range implements Cloneable, Clusterable {
         if (this.low == null && this.high == null) return true;
         else if (this.low == null && this.high != null) {
             if (other.low == null) return true;
-            else if (TypeUtils.compareTo(this.high, other.low, type) >= 0) return true;
-            else return false;
+            else return TypeUtils.compareTo(this.high, other.low, type) >= 0;
         } else if (this.low != null && this.high == null) {
             if (other.high == null) return true;
-            else if (TypeUtils.compareTo(this.low, other.high, type) <= 0) return true;
-            else return false;
+            else return TypeUtils.compareTo(this.low, other.high, type) <= 0;
         } else { // intersection.low != null && intersection.high != null
             if (other.low == null || other.high == null) {
                 return true;
@@ -125,11 +123,8 @@ public class Range implements Cloneable, Clusterable {
                 return true;
             } else if (TypeUtils.compareTo(this.low, other.low, type) <= 0 && TypeUtils.compareTo(this.high, other.high, type) >= 0) {
                 return true;
-            } else if (TypeUtils.compareTo(this.low, other.low, type) >= 0 && TypeUtils.compareTo(this.high, other.high, type) <= 0) {
-                return true;
-            } else {
-                return false;
-            }
+            } else
+                return TypeUtils.compareTo(this.low, other.low, type) >= 0 && TypeUtils.compareTo(this.high, other.high, type) <= 0;
         }
     }
 
@@ -207,8 +202,8 @@ public class Range implements Cloneable, Clusterable {
                 this.high = (long) ((Long) this.high + length * percentage);
                 break;
             case DOUBLE:
-                this.low = (double) ((Double) this.low - length * percentage);
-                this.high = (double) ((Double) this.high + length * percentage);
+                this.low = (Double) this.low - length * percentage;
+                this.high = (Double) this.high + length * percentage;
                 break;
             default:
                 throw new RuntimeException(this.type + " not implemented for range");
@@ -231,8 +226,8 @@ public class Range implements Cloneable, Clusterable {
                     splitHigh = (long) (((Long) low) + splitLength * (i + 1));
                     break;
                 case DOUBLE:
-                    splitLow = (double) (((Double) low) + splitLength * i);
-                    splitHigh = (double) (((Double) low) + splitLength * (i + 1));
+                    splitLow = ((Double) low) + splitLength * i;
+                    splitHigh = ((Double) low) + splitLength * (i + 1);
                     break;
                 default:
                     throw new RuntimeException("can't split non-numeric ranges");

@@ -2,7 +2,6 @@ package perf.tools;
 
 import core.common.globals.Globals;
 import core.common.globals.TableInfo;
-import core.common.index.JoinRobustTree;
 import core.common.index.RobustTree;
 import core.common.key.ParsedTupleList;
 import core.common.key.RawIndexKey;
@@ -78,9 +77,6 @@ public class RunIndexBuilder {
             case 2:
                 t.buildRobustTreeFromSamples();
                 break;
-            case 3:
-                t.buildJoinRobustTreeFromSamples();
-                break;
             case 4:
                 if (t.inputsDir.startsWith("hdfs:")) {
                     t.uploadFromHDFS();
@@ -96,9 +92,6 @@ public class RunIndexBuilder {
                 break;
             case 6:
                 t.writeOutSampleFile();
-                break;
-            case 7:
-                t.writePartitionsFromJoinIndex();
                 break;
             case 8:
                 t.buildKDTreeFromSamples();
@@ -316,29 +309,6 @@ public class RunIndexBuilder {
         System.out.println("Time Taken: " + (endTime - startTime) + "ms");
     }
 
-    /**
-     * Creates a single robust tree(hard code the attributes used in the tree for now).
-     * As a side effect reads all the sample files
-     * from the samples dir and writes it out WORKING_DIR/sample
-     */
-    public void buildJoinRobustTreeFromSamples() {
-        assert numBuckets != -1;
-
-        // Write out the combined sample file.
-        ParsedTupleList sample = readSampleFiles();
-        writeOutSample(fs, sample);
-
-        // Construct the index from the sample.
-        JoinRobustTree index = new JoinRobustTree(tableInfo);
-        index.joinAttributeDepth = this.joinAttributeDepth;
-        builder.buildJoinIndexFromSample(
-                sample,
-                numBuckets, joinAttribute,
-                index,
-                getHDFSWriter(tableHDFSDir,
-                        cfg.getHDFS_REPLICATION_FACTOR()));
-    }
-
     public void writeOutSampleFile() {
         FileSystem fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
 
@@ -388,24 +358,6 @@ public class RunIndexBuilder {
 
         long endTime = System.currentTimeMillis();
         System.out.println("Time Taken: " + (endTime - startTime) + "ms");
-    }
-
-    public void writePartitionsFromJoinIndex() {
-        FileSystem fs = HDFSUtils.getFSByHadoopHome(cfg.getHADOOP_HOME());
-        byte[] indexBytes = HDFSUtils.readFile(fs, tableHDFSDir + "/index");
-
-        // Just load the index. For this we don't need to load the samples.
-        JoinRobustTree index = new JoinRobustTree(tableInfo);
-        index.unmarshall(indexBytes);
-
-        String dataDir = "/data";
-        builder.buildDistributedFromIndex(
-                index,
-                key,
-                inputsDir,
-                getHDFSWriter(
-                        cfg.getHDFS_WORKING_DIR() + "/" + tableName + dataDir,
-                        cfg.getHDFS_REPLICATION_FACTOR()));
     }
 
     public void loadSettings(String[] args) {

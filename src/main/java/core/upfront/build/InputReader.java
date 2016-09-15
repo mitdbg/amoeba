@@ -119,10 +119,7 @@ public class InputReader {
      */
 
     private boolean sampleSucceed(double samplingRate) {
-        if (Math.random() > samplingRate) {
-            return false;
-        }
-        return true;
+        return Math.random() <= samplingRate;
     }
 
     /**
@@ -144,12 +141,15 @@ public class InputReader {
                 if ((nRead = ch.read(bb)) == -1) {
                     break;
                 }
-                // skip the first tuple.
+
                 byteArrayIdx = previous = 0;
-                while (byteArrayIdx < nRead && byteArray[byteArrayIdx] != newLine) {
-                    byteArrayIdx++;
+                if (position != 0) {
+                    // skip the first tuple if not starting of file.
+                    while (byteArrayIdx < nRead && byteArray[byteArrayIdx] != newLine) {
+                        byteArrayIdx++;
+                    }
+                    previous = ++byteArrayIdx;
                 }
-                previous = ++byteArrayIdx;
 
                 processByteBuffer(null, out);
                 bb.clear();

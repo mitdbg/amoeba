@@ -52,17 +52,6 @@ public class AccessMethod {
     }
 
     /**
-     * This method returns whether or not a given partition qualifies for the
-     * predicate.
-     *
-     * @param predicate
-     * @return
-     */
-    public boolean isRelevant(String partitionid, Predicate predicate) {
-        return true;
-    }
-
-    /**
      * This method is used to: 1. lookup the partition index for relevant
      * partitions 2. and, to create splits of partitions which could be assigned
      * to different node.

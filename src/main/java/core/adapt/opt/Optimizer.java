@@ -198,7 +198,7 @@ public class Optimizer {
      * @param q
      * @return
      */
-    public PartitionSplit[] buildMultiPredicatePlan(final Query q) {
+    public PartitionSplit[] buildPlan(final Query q) {
         System.out.println("INFO: Running query " + q.toString());
         this.queryWindow.add(q);
 
@@ -339,66 +339,6 @@ public class Optimizer {
         return pred;
     }
 
-    public PartitionSplit[] buildPlan(final Query q) {
-        this.queryWindow.add(q);
-
-        Predicate[] ps = q.getPredicates();
-        LinkedList<Predicate> choices = new LinkedList<Predicate>();
-
-        // Initialize the set of choices for predicates.
-        for (int i = 0; i < ps.length; i++) {
-            choices.add(ps[i]);
-        }
-
-        Plan best = getBestPlan(choices, ps);
-
-        System.out.println("plan.cost: " + best.cost + " plan.benefit: "
-                + best.benefit);
-        if (best.cost > best.benefit) {
-            best = null;
-        }
-
-        PartitionSplit[] psplits;
-        if (best != null) {
-            psplits = this.getPartitionSplits(best, q);
-        } else {
-            psplits = this.buildAccessPlan(q);
-        }
-
-        // Check if we are updating the index ?
-        boolean updated = true;
-        if (psplits.length == 1) {
-            if (psplits[0].getIterator().getClass() == PostFilterIterator.class) {
-                updated = false;
-            }
-        }
-
-        // Debug
-        long totalCostOfQuery = 0;
-        for (int i = 0; i < psplits.length; i++) {
-            int[] bids = psplits[i].getPartitions();
-            double numTuplesAccessed = 0;
-            for (int j = 0; j < bids.length; j++) {
-                numTuplesAccessed += Globals.c * Bucket.getEstimatedNumTuples(bids[j]);
-            }
-
-            totalCostOfQuery += numTuplesAccessed;
-        }
-        System.out.println("Query Cost: " + totalCostOfQuery);
-
-        FileSystem fs = HDFSUtils.getFSByHadoopHome(hadoopHome);
-        this.persistQueryToDisk(fs, q);
-        if (updated) {
-            System.out.println("INFO: Index being updated");
-            this.updateIndex(best, q.getPredicates());
-            this.persistIndexToDisk(fs);
-        } else {
-            System.out.println("INFO: No index update");
-        }
-
-        return psplits;
-    }
-
     private Plan getBestPlan(List<Predicate> choices, Predicate[] ps) {
         Plan plan = null;
         for (Predicate p : choices) {
@@ -502,90 +442,6 @@ public class Optimizer {
             case 5:
                 break;
         }
-    }
-
-    private PartitionSplit[] getPartitionSplits(Plan best, Query fq) {
-        List<PartitionSplit> lps = new ArrayList<PartitionSplit>();
-        final int[] modifyingOptions = new int[]{1};
-        Action acTree = best.actions;
-
-        LinkedList<RNode> nodeStack = new LinkedList<RNode>();
-        nodeStack.add(this.rt.getRoot());
-
-        LinkedList<Action> actionStack = new LinkedList<Action>();
-        actionStack.add(acTree);
-
-        List<Integer> unmodifiedBuckets = new ArrayList<Integer>();
-
-        boolean printed = false;
-
-        Predicate[] ps = fq.getPredicates();
-        while (nodeStack.size() > 0) {
-            RNode n = nodeStack.removeLast();
-            Action a = actionStack.removeLast();
-
-            boolean isModifying = false;
-            for (int t : modifyingOptions) {
-                if (t == a.option) {
-                    List<RNode> bs = n.search(ps);
-                    int[] bucketIds = new int[bs.size()];
-                    for (int i = 0; i < bucketIds.length; i++) {
-                        bucketIds[i] = bs.get(i).bucket.getBucketId();
-                    }
-
-                    Predicate p = a.pid;
-                    RNode r = n.clone();
-                    r.attribute = p.attribute;
-                    r.type = p.type;
-                    r.value = p.value;
-                    replaceInTree(n, r);
-
-                    if (!printed) {
-                        System.out.println("Inserted pred: " + p.toString());
-                        printed = true;
-                    }
-
-                    // Give new bucket ids to all nodes below this
-                    updateBucketIds(bs);
-
-                    PartitionIterator pi = new RepartitionIterator(fq);
-                    PartitionSplit psplit = new PartitionSplit(bucketIds, pi);
-                    lps.add(psplit);
-                    isModifying = true;
-                    break;
-                }
-            }
-
-            if (!isModifying) {
-                if (a.right != null) {
-                    actionStack.add(a.right);
-                    nodeStack.add(n.rightChild);
-                }
-
-                if (a.left != null) {
-                    actionStack.add(a.left);
-                    nodeStack.add(n.leftChild);
-                }
-
-                if (n.bucket != null) {
-                    unmodifiedBuckets.add(n.bucket.getBucketId());
-                }
-            }
-        }
-
-        if (unmodifiedBuckets.size() > 0) {
-            PartitionIterator pi = new PostFilterIterator(fq);
-            int[] bids = new int[unmodifiedBuckets.size()];
-            Iterator<Integer> it = unmodifiedBuckets.iterator();
-            for (int i = 0; i < bids.length; i++) {
-                bids[i] = it.next();
-            }
-            PartitionSplit psplit = new PartitionSplit(bids, pi);
-            lps.add(psplit);
-        }
-
-        PartitionSplit[] splits = lps.toArray(new PartitionSplit[lps.size()]);
-        return splits;
     }
 
     /**
@@ -1017,7 +873,8 @@ public class Optimizer {
 
     public void loadQueries() {
         FileSystem fs = HDFSUtils.getFSByHadoopHome(hadoopHome);
-        String pathToQueries = this.workingDir + "/queries";
+        String tableDir = this.workingDir + "/" + rt.tableInfo.tableName;
+        String pathToQueries = tableDir + "/queries";
         try {
             if (fs.exists(new Path(pathToQueries))) {
                 byte[] queryBytes = HDFSUtils.readFile(fs, pathToQueries);

@@ -24,8 +24,6 @@ public class TypeUtils {
         }
     }
 
-    ;
-
     public static Comparator<Object> getComparatorForType(TYPE type) {
         switch (type) {
             case INT:

@@ -14,6 +14,6 @@ if __name__ == "__main__":
     os.system("mkdir simple")
 
   os.chdir("simple")
-  rands = ["%d|%d" % (random.randint(1,1000), random.randint(1,1000)) for i in xrange(0,1000)]
-  open("simple.txt", "w").write("\n".join(rands))
+  rands = ["%d|%d\n" % (random.randint(1,1000), random.randint(1,1000)) for i in xrange(0,1000)]
+  open("simple.txt", "w").write("".join(rands))
 

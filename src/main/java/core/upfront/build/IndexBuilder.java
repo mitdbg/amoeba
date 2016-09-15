@@ -1,6 +1,5 @@
 package core.upfront.build;
 
-import core.common.index.JoinRobustTree;
 import core.common.index.MDIndex;
 import core.common.index.RobustTree;
 import core.common.key.ParsedTupleList;
@@ -78,23 +77,6 @@ public class IndexBuilder {
 
         long startTime = System.nanoTime();
         index.initProbe();
-        System.out.println("BUILD: index building time = " + ((System.nanoTime() - startTime) / 1E9));
-
-        startTime = System.nanoTime();
-        byte[] indexBytes = index.marshall();
-        System.out.println("Index Size: " + indexBytes.length);
-        writer.writeToPartition("index", indexBytes, 0, indexBytes.length);
-        writer.flush();
-        System.out.println("BUILD: index writing time = " + ((System.nanoTime() - startTime) / 1E9));
-    }
-
-    // Build join index from the samples collected.
-    public void buildJoinIndexFromSample(ParsedTupleList sample, int numBuckets, int joinAttribute, MDIndex index, PartitionWriter writer) {
-        index.setMaxBuckets(numBuckets);
-        ((JoinRobustTree) index).loadSample(sample);
-
-        long startTime = System.nanoTime();
-        index.initProbe(joinAttribute);
         System.out.println("BUILD: index building time = " + ((System.nanoTime() - startTime) / 1E9));
 
         startTime = System.nanoTime();

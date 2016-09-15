@@ -2,7 +2,6 @@ package core.simulator;
 
 import core.adapt.AccessMethod.PartitionSplit;
 import core.adapt.Query;
-import core.adapt.iterator.RepartitionIterator;
 import core.adapt.opt.Optimizer;
 import core.common.globals.Globals;
 import core.utils.ConfUtils;
@@ -79,7 +78,7 @@ public class Simulator {
         for (int i = 0; i < queries.length; i++) {
             Query q = queries[i];
             q.setTable(simName);
-            PartitionSplit[] splits = opt.buildMultiPredicatePlan(q);
+            PartitionSplit[] splits = opt.buildPlan(q);
 
             // When using the multi-predicate plan builder, the rt gets dirtied
             // We need to reload for every query.

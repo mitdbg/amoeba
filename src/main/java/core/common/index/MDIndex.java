@@ -13,7 +13,7 @@ import java.util.HashMap;
  */
 public interface MDIndex extends Serializable {
 
-    public MDIndex clone() throws CloneNotSupportedException;
+    MDIndex clone() throws CloneNotSupportedException;
 
     int getMaxBuckets();
 
@@ -28,9 +28,9 @@ public interface MDIndex extends Serializable {
      *
      * The Probe phase of the index
      */
-    public void initProbe();
+    void initProbe();
 
-    public void initProbe(int joinAttribute);
+    void initProbe(int joinAttribute);
 
     /**
      * Get the bucket id, for a given key, from an existing index.
@@ -38,21 +38,21 @@ public interface MDIndex extends Serializable {
      * @param key
      * @return
      */
-    public Integer getBucketId(RawIndexKey key);
+    Integer getBucketId(RawIndexKey key);
 
     /**
      * Serialize the index into a byte array.
      *
      * @return serialized index.
      */
-    public byte[] marshall();
+    byte[] marshall();
 
     /**
      * Deserialize the index from a byte array.
      *
      * @param bytes
      */
-    public void unmarshall(byte[] bytes);
+    void unmarshall(byte[] bytes);
 
     /*
      * Placeholder class for the index leaves.

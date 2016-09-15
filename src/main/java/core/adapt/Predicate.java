@@ -10,7 +10,6 @@ import java.util.List;
 public class Predicate {
     public int attribute;
 
-    ;
     public TYPE type;
     public Object value;
     public PREDTYPE predtype;
