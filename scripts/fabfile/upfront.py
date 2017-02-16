@@ -13,7 +13,7 @@ def hdfs_upload_test():
     with cd(env.conf['HADOOPBIN']):
         cmd = './hadoop fs -copyFromLocal' + \
             ' $INPUTSDIR/*' + \
-            ' $HDFSDIR/testUpload/'
+            ' $HDFSDIR/uploadtest/'
         cmd = fill_cmd(cmd)
         run(cmd)
 
@@ -67,7 +67,6 @@ def create_robust_tree():
 @roles('master')
 def create_kdtree():
     global conf
-    print env.roledefs
     with cd(env.conf['HADOOPBIN']):
         cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
             ' --conf $CONF' + \
@@ -82,7 +81,6 @@ def create_kdtree():
 @roles('master')
 def create_range_tree():
     global conf
-    print env.roledefs
     with cd(env.conf['HADOOPBIN']):
         cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
             ' --conf $CONF' + \
@@ -97,7 +95,6 @@ def create_range_tree():
 @roles('master')
 def create_hybrid_range_tree():
     global conf
-    print env.roledefs
     with cd(env.conf['HADOOPBIN']):
         cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
             ' --conf $CONF' + \
@@ -112,7 +109,6 @@ def create_hybrid_range_tree():
 @roles('master')
 def create_custom_tree():
     global conf
-    print env.roledefs
     with cd(env.conf['HADOOPBIN']):
         cmd = './hadoop jar $JAR perf.tools.RunIndexBuilder' + \
             ' --conf $CONF' + \

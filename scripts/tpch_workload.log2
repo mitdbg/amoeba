@@ -1,0 +1,192 @@
+Conf: /Users/anil/Dev/repos/mdindex/conf/main.properties
+l_linenumber INT,l_quantity DOUBLE,l_extendedprice DOUBLE,l_discount DOUBLE,l_tax DOUBLE,l_returnflag STRING,l_linestatus STRING,l_shipdate DATE,l_commitdate DATE,l_receiptdate DATE,l_shipinstruct STRING,l_shipmode STRING,o_orderstatus STRING,o_totalprice DOUBLE,o_orderdate DATE,o_orderpriority STRING,o_clerk STRING,o_shippriority INT,p_name STRING,p_mfgr STRING,p_brand STRING,p_type STRING,p_size INT,p_container STRING,p_retailprice DOUBLE,s_name STRING,s_address STRING,s_phone STRING,s_acctbal DOUBLE,s_nation STRING,s_region STRING,c_name STRING,c_address STRING,c_phone STRING,c_acctbal DOUBLE,c_mktsegment STRING,c_nation STRING,c_region STRING
+INFO: Created schema with 38 fields
+Memory Stats (F/T/M): 3825946032 4116185088 4116185088
+Num Queries: 10
+INFO: Workload 10
+INFO: Query:tpch|11:STRING:MAIL:LEQ;9:DATE:1997-01-01:GEQ;9:DATE:1998-01-01:LT;11:STRING:FOB:GT
+INFO: Query:tpch|5:STRING:R:LEQ;14:DATE:1993-12-01:GEQ;14:DATE:1994-03-01:LT;5:STRING:N:GT
+INFO: Query:tpch|7:DATE:1994-01-01:GEQ;7:DATE:1995-01-01:LT;3:DOUBLE:0.01819046261650576:GT;3:DOUBLE:0.038190462616505765:LEQ;1:DOUBLE:25.0:LEQ
+INFO: Query:tpch|7:DATE:1995-01-01:GEQ;7:DATE:1996-01-01:LT;3:DOUBLE:0.03696324293185029:GT;3:DOUBLE:0.056963242931850296:LEQ;1:DOUBLE:25.0:LEQ
+INFO: Query:tpch|10:STRING:DELIVER IN PERSON:EQ;20:STRING:Brand#51:EQ;23:STRING:SM CASE:EQ;1:DOUBLE:2.0:GT;1:DOUBLE:12.0:LEQ;22:INT:1:GEQ;22:INT:5:LEQ;11:STRING:AIR:LEQ
+INFO: Query:tpch|37:STRING:EUROPE:LEQ;30:STRING:EUROPE:LEQ;14:DATE:1996-01-01:GEQ;14:DATE:1997-01-01:LT;37:STRING:ASIA:GT;30:STRING:ASIA:GT
+INFO: Query:tpch|37:STRING:ASIA:LEQ;30:STRING:ASIA:LEQ;14:DATE:1995-01-01:GEQ;14:DATE:1996-01-01:LT;37:STRING:AMERICA:GT;30:STRING:AMERICA:GT
+INFO: Query:tpch|11:STRING:TRUCK:LEQ;9:DATE:1995-01-01:GEQ;9:DATE:1996-01-01:LT;11:STRING:SHIP:GT
+INFO: Query:tpch|5:STRING:R:LEQ;14:DATE:1994-12-01:GEQ;14:DATE:1995-03-01:LT;5:STRING:N:GT
+INFO: Query:tpch|10:STRING:DELIVER IN PERSON:EQ;20:STRING:Brand#13:EQ;23:STRING:SM CASE:EQ;1:DOUBLE:8.0:GT;1:DOUBLE:18.0:LEQ;22:INT:1:GEQ;22:INT:5:LEQ;11:STRING:AIR:LEQ
+INFO: Access Sizes
+core.adapt.iterator.PostFilterIterator : 1751914735
+Number of splits= 12
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [0]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [1]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [2]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [3]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [4]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [5]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [6]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [7]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [8]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [9]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [10]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [11]
+done with getting splits
+RES: Time Taken: 19469; Result: 129925
+INFO: Access Sizes
+core.adapt.iterator.PostFilterIterator : 2452396031
+Number of splits= 16
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [0]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [1]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [2]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [3]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [4]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [5]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [6]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [7]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [8]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [9]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [10]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [11]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [12]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [13]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [14]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [15]
+done with getting splits
+RES: Time Taken: 23229; Result: 111975
+INFO: Access Sizes
+core.adapt.iterator.PostFilterIterator : 2452396031
+Number of splits= 16
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [0]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [1]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [2]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [3]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [4]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [5]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [6]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [7]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [8]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [9]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [10]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [11]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [12]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [13]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [14]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [15]
+done with getting splits
+RES: Time Taken: 23572; Result: 82889
+INFO: Access Sizes
+core.adapt.iterator.PostFilterIterator : 2452396031
+Number of splits= 16
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [0]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [1]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [2]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [3]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [4]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [5]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [6]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [7]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [8]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [9]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [10]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [11]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [12]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [13]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [14]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [15]
+done with getting splits
+RES: Time Taken: 23089; Result: 83388
+INFO: Access Sizes
+core.adapt.iterator.PostFilterIterator : 393132549
+Number of splits= 3
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [8]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [9]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [10]
+done with getting splits
+RES: Time Taken: 9606; Result: 3
+INFO: Access Sizes
+core.adapt.iterator.PostFilterIterator : 2452396031
+Number of splits= 16
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [0]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [1]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [2]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [3]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [4]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [5]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [6]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [7]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [8]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [9]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [10]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [11]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [12]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [13]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [14]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [15]
+done with getting splits
+RES: Time Taken: 22313; Result: 36763
+INFO: Access Sizes
+core.adapt.iterator.PostFilterIterator : 2452396031
+Number of splits= 16
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [0]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [1]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [2]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [3]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [4]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [5]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [6]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [7]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [8]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [9]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [10]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [11]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [12]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [13]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [14]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [15]
+done with getting splits
+RES: Time Taken: 21673; Result: 36845
+INFO: Access Sizes
+core.adapt.iterator.PostFilterIterator : 1929397217
+Number of splits= 12
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [0]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [1]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [2]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [3]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [4]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [5]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [6]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [7]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [12]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [13]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [14]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [15]
+done with getting splits
+RES: Time Taken: 18082; Result: 130664
+INFO: Access Sizes
+core.adapt.iterator.PostFilterIterator : 2452396031
+Number of splits= 16
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [0]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [1]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [2]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [3]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [4]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [5]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [6]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [7]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [8]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [9]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [10]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [11]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [12]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [13]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [14]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [15]
+done with getting splits
+RES: Time Taken: 20928; Result: 108549
+INFO: Access Sizes
+core.adapt.iterator.PostFilterIterator : 393132549
+Number of splits= 3
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [8]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [9]
+SPLIT: core.adapt.iterator.PostFilterIterator buckets: [10]
+done with getting splits
+RES: Time Taken: 9696; Result: 2

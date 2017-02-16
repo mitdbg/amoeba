@@ -197,4 +197,13 @@ def create_script_download_data_join():
 def download_data_join():
     run('nohup /data/mdindex/yilu/download_data.sh >> /tmp/xxx 2>&1 < /dev/null &', pty=False)
 
+@serial
+def download_lineitem_data():
+  global counter
+  run('rm -R /data/mdindex/lineitem100/')
+  run('mkdir -p /data/mdindex/lineitem100/')
+  with cd('/data/mdindex/lineitem100'):
+    run('nohup /home/mdindex/hadoop-2.6.0/bin/hadoop fs -get /user/mdindex/tpch100-raw/lineitem.tbl.%d >> /tmp/xxx 2>&1 < /dev/null &' % (counter + 1), pty=False)
+    counter += 1
+
 

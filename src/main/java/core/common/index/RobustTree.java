@@ -130,6 +130,16 @@ public class RobustTree implements MDIndex {
             allocations[i] = allocationPerAttribute;
         }
 
+        // Custom
+//        double[] allocations = new double[this.numAttributes];
+//        for (int i = 0; i < this.numAttributes; i++)
+//            allocations[i] = -1;
+//
+//        allocations[tableInfo.schema.getAttributeId("o_orderdate")] = 12;
+//        allocations[tableInfo.schema.getAttributeId("l_quantity")] = 6;
+//        allocations[tableInfo.schema.getAttributeId("c_mktsegment")] = 4;
+//        allocations[tableInfo.schema.getAttributeId("c_region")] = 4;
+
         /**
          * Do a level-order traversal
          */
@@ -222,6 +232,14 @@ public class RobustTree implements MDIndex {
 //            }
 //            // Could be useful to add quantity
 //        }
+
+        if (countCalled < 0) {
+            countCalled++;
+            if (countCalled == 0) {
+                return tableInfo.schema.getAttributeId("sf_uploadtime"); // o_orderdate
+            }
+            // Could be useful to add quantity
+        }
 
         leastAllocated.clear();
         leastAllocated.add(0);

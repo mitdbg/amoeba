@@ -89,10 +89,10 @@ public class RunSimulator {
             String text;
 
             while ((text = reader.readLine()) != null) {
-                if (mode == 1) {
-                    list.add(new Query(text));
-                } else if (mode == 3) {
+                if (mode == 3) {
                     list.add(Query.getQueryFromFormattedString(tableInfo, text));
+                } else {
+                    list.add(new Query(text));
                 }
             }
         } catch (FileNotFoundException e) {
