@@ -53,12 +53,12 @@ def tpch_gen_100():
 def script_move_data_tpch():
     # Create directory on HDFS first.
     global counter
-    with cd('/data/mdindex/tpch100/'):
+    with cd('/data/mdindex/'):
         script = "#!/bin/bash\n"
         script += "/home/mdindex/hadoop-2.6.0/bin/hadoop fs -copyFromLocal " + \
-            "/data/mdindex/tpch100/*.tbl.%d /user/mdindex/tpch100-raw/\n" % (counter + 1)
-        script += "/home/mdindex/hadoop-2.6.0/bin/hadoop fs -copyFromLocal " + \
-            "/data/mdindex/tpch100/*.tbl /user/mdindex/tpch100-raw/"
+            "/data/mdindex/tpchd100/part* /user/mdindex/tpchd100/\n"
+#         script += "/home/mdindex/hadoop-2.6.0/bin/hadoop fs -copyFromLocal " + \
+            # "/data/mdindex/tpch100/*.tbl /user/mdindex/tpch100-raw/"
         run('echo "%s" > move_data.sh' % script)
         run('chmod +x move_data.sh')
 
@@ -66,7 +66,7 @@ def script_move_data_tpch():
 
 @parallel
 def move_data_tpch():
-    run('nohup /data/mdindex/tpch100/move_data.sh >> /tmp/xxx 2>&1 < /dev/null &', pty=False)
+    run('nohup /data/mdindex/move_data.sh >> /tmp/xxx 2>&1 < /dev/null &', pty=False)
 
 # Next run
 # ./spark-shell --master spark://128.30.77.86:7077 --packages com.databricks:spark-csv_2.11:1.2.0 --driver-memory 4G --executor-memory 100G -i <path to>/tpch.scala
@@ -196,5 +196,14 @@ def create_script_download_data_join():
 @parallel
 def download_data_join():
     run('nohup /data/mdindex/yilu/download_data.sh >> /tmp/xxx 2>&1 < /dev/null &', pty=False)
+
+@serial
+def download_lineitem_data():
+  global counter
+  run('rm -R /data/mdindex/lineitem100/')
+  run('mkdir -p /data/mdindex/lineitem100/')
+  with cd('/data/mdindex/lineitem100'):
+    run('nohup /home/mdindex/hadoop-2.6.0/bin/hadoop fs -get /user/mdindex/tpch100-raw/lineitem.tbl.%d >> /tmp/xxx 2>&1 < /dev/null &' % (counter + 1), pty=False)
+    counter += 1
 
 
